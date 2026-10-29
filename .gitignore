@@ -1,0 +1,40 @@
+# Ambientes virtuais e Python
+.venv/
+venv/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Variáveis de ambiente e segredos
+.env
+.streamlit/secrets.toml
+
+# Proteção da planilha original da CTI e camadas locais de dados sensíveis
+Contabilidade e Finanças*.xlsx
+Contabilidade_e_Financas*.xlsx
+data/raw/*.xlsx
+data/raw/*.xls
+data/raw/*.csv
+data/staging/*.parquet
+data/staging/*.csv
+data/staging/*.json
+data/processed/*.parquet
+data/processed/*.csv
+data/processed/*.json
+
+# Manter estrutura de pastas
+!data/raw/.gitkeep
+!data/staging/.gitkeep
+!data/processed/.gitkeep
+
+# Sistema operacional e IDEs
+.DS_Store
+Thumbs.db
+~$*.xlsx
+.vscode/
+.idea/
+
