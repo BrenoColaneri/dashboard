@@ -13,10 +13,10 @@ __pycache__/
 .env
 .streamlit/secrets.toml
 
-# Proteção da planilha original da CTI e camadas locais de dados sensíveis
-Contabilidade e Finanças*.xlsx
-Contabilidade_e_Financas*.xlsx
-data/raw/*.xlsx
+# Planilhas e dados locais
+# Contabilidade e Finanças*.xlsx
+# Contabilidade_e_Financas*.xlsx
+# data/raw/*.xlsx
 data/raw/*.xls
 data/raw/*.csv
 data/staging/*.parquet
