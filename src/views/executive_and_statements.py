@@ -492,8 +492,10 @@ def _build_structured_dfc_table(df_scen: pd.DataFrame) -> pd.DataFrame:
             row_dict: dict[str, str] = {"Demonstração de Fluxo de Caixa": label}
             for p_lbl, v in zip(periods, vals):
                 row_dict[p_lbl] = format_currency_brl(float(v), compact=True)
-            if label in ("Saldo Inicial de Caixa", "Saldo Final de Caixa"):
-                row_dict["Saldo Final"] = format_currency_brl(float(vals[-1]), compact=True)
+            if label == "Saldo Inicial de Caixa":
+                row_dict["Total Acumulado"] = format_currency_brl(float(vals[0]), compact=True)
+            elif label == "Saldo Final de Caixa":
+                row_dict["Total Acumulado"] = format_currency_brl(float(vals[-1]), compact=True)
             else:
                 row_dict["Total Acumulado"] = format_currency_brl(float(np.nansum(vals)), compact=True)
             rows.append(row_dict)

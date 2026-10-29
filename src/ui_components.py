@@ -314,7 +314,7 @@ def inject_corporate_css() -> None:
             gap: 0.45rem;
         }}
 
-        /* Tabelas Corporativas HTML Nativas — 100% Responsivas e Sem Rolagem Interna */
+        /* Tabelas Corporativas HTML Nativas — 100% Responsivas e Sem Truncamento de Dados */
         .cti-table-container {{
             width: 100% !important;
             margin: 0.85rem 0 1.25rem 0 !important;
@@ -324,60 +324,100 @@ def inject_corporate_css() -> None:
             background: #FFFFFF;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
         }}
+        .cti-table-scroll {{
+            width: 100% !important;
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch;
+        }}
+        .cti-table-scroll::-webkit-scrollbar {{
+            height: 7px;
+        }}
+        .cti-table-scroll::-webkit-scrollbar-track {{
+            background: #F1F5F9;
+        }}
+        .cti-table-scroll::-webkit-scrollbar-thumb {{
+            background: #CBD5E1;
+            border-radius: 4px;
+        }}
+        .cti-table-scroll::-webkit-scrollbar-thumb:hover {{
+            background: #94A3B8;
+        }}
         .cti-html-table {{
             width: 100% !important;
-            table-layout: fixed !important;
-            border-collapse: collapse !important;
+            min-width: 1100px !important;
+            table-layout: auto !important;
+            border-collapse: separate !important;
+            border-spacing: 0 !important;
             font-family: inherit;
-            font-size: 0.74rem;
-            line-height: 1.25;
+            font-size: 0.78rem;
+            line-height: 1.35;
         }}
         .cti-html-table th {{
             background-color: {PALETTE["primary"]} !important;
             color: #FFFFFF !important;
             font-weight: 600 !important;
-            padding: 0.45rem 0.35rem !important;
+            padding: 0.55rem 0.65rem !important;
             border-bottom: 2px solid {PALETTE["primary_dark"]} !important;
-            border-right: 1px solid rgba(255, 255, 255, 0.12) !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.15) !important;
             text-align: right;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            white-space: nowrap !important;
+            min-width: 75px;
         }}
         .cti-html-table th:first-child {{
             text-align: left !important;
-            width: 20% !important;
+            min-width: 250px !important;
+            width: 250px !important;
             white-space: normal !important;
+            position: sticky;
+            left: 0;
+            z-index: 5;
+            background-color: {PALETTE["primary"]} !important;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.08);
+        }}
+        .cti-html-table th:last-child {{
+            background-color: {PALETTE["primary_dark"]} !important;
+            border-left: 2px solid rgba(255, 255, 255, 0.25) !important;
+            min-width: 95px;
         }}
         .cti-html-table td {{
-            padding: 0.45rem 0.35rem !important;
+            padding: 0.50rem 0.65rem !important;
             border-bottom: 1px solid #E2E8F0 !important;
             border-right: 1px solid #F1F5F9 !important;
             color: #0F172A !important;
             text-align: right;
             font-variant-numeric: tabular-nums;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            white-space: nowrap !important;
+            min-width: 75px;
         }}
         .cti-html-table td:first-child {{
             text-align: left !important;
             font-weight: 600;
             color: {PALETTE["neutral_dark"]};
+            min-width: 250px !important;
+            width: 250px !important;
             white-space: normal !important;
-            line-height: 1.2 !important;
+            line-height: 1.25 !important;
+            position: sticky;
+            left: 0;
+            z-index: 2;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
         }}
-        .cti-html-table tr:nth-child(even) {{
-            background-color: #F8FAFC !important;
+        .cti-html-table td:last-child {{
+            font-weight: 700;
+            border-left: 2px solid #E2E8F0 !important;
+            min-width: 95px;
         }}
-        .cti-html-table tr:hover {{
+        .cti-html-table tr:nth-child(even) td {{
+            background-color: #F8FAFC;
+        }}
+        .cti-html-table tr:nth-child(odd) td {{
+            background-color: #FFFFFF;
+        }}
+        .cti-html-table tr:hover td {{
             background-color: #F1F5F9 !important;
         }}
-        .cti-html-table tr.is-total {{
-            background-color: #ECFDF5 !important;
-            font-weight: 700 !important;
-        }}
         .cti-html-table tr.is-total td {{
+            background-color: #ECFDF5 !important;
             border-top: 2px solid {PALETTE["primary"]} !important;
             border-bottom: 2px solid {PALETTE["primary"]} !important;
             font-weight: 700 !important;
@@ -656,15 +696,16 @@ def render_data_footer(store: ProcessedDataStore) -> None:
 
 def calc_table_height(
     df: pd.DataFrame | None,
-    row_height: int = 35,
-    header_height: int = 38,
-    min_height: int = 120,
+    row_height: int = 36,
+    header_height: int = 40,
+    min_height: int = 130,
     max_height: int = 1400,
 ) -> int:
     """Calcula a altura exata necessária para exibir todas as linhas da tabela sem rolagem vertical."""
     if df is None or len(df) == 0:
         return min_height
-    calculated = len(df) * row_height + header_height + 5
+    extra_scroll_padding = 22 if (len(df.columns) > 6) else 10
+    calculated = len(df) * row_height + header_height + extra_scroll_padding
     return max(min_height, min(calculated, max_height))
 
 
@@ -675,13 +716,13 @@ def render_corporate_table(
     highlight_totals: bool = True,
     compact: bool = False,
 ) -> None:
-    """Renderiza uma tabela corporativa HTML nativa, 100% responsiva, sem barra de rolagem vertical ou horizontal."""
+    """Renderiza uma tabela corporativa HTML nativa, 100% legível com rolagem horizontal suave e sem cortes."""
     if df is None or len(df) == 0:
         render_empty_state()
         return
 
     headers_html = "".join([
-        f'<th>{html.escape(str(col))}</th>'
+        f'<th title="{html.escape(str(col))}">{html.escape(str(col))}</th>'
         for col in df.columns
     ])
 
@@ -695,8 +736,12 @@ def render_corporate_table(
 
         tds = []
         for col_idx, col in enumerate(df.columns):
-            val = str(row[col])
-            tds.append(f'<td>{html.escape(val)}</td>')
+            raw_v = row[col]
+            if pd.isna(raw_v) or str(raw_v).strip().lower() in ("nan", "none", "<na>"):
+                val = "—"
+            else:
+                val = str(raw_v)
+            tds.append(f'<td title="{html.escape(val)}">{html.escape(val)}</td>')
 
         rows_html.append(f'<tr{tr_class}>{"".join(tds)}</tr>')
 
@@ -713,7 +758,7 @@ def render_corporate_table(
     table_html = f"""
     <div class="cti-table-container">
         {hdr_block}
-        <div style="width: 100%; overflow-x: auto;">
+        <div class="cti-table-scroll">
             <table class="cti-html-table">
                 <thead>
                     <tr>{headers_html}</tr>
