@@ -314,7 +314,7 @@ def inject_corporate_css() -> None:
             gap: 0.45rem;
         }}
 
-        /* Tabelas Corporativas HTML Nativas — 100% Responsivas e Sem Truncamento de Dados */
+        /* Tabelas Corporativas HTML Nativas CTI Global — 100% Responsivas e Padronizadas em Verde */
         .cti-table-container {{
             width: 100% !important;
             margin: 0.85rem 0 1.25rem 0 !important;
@@ -322,35 +322,48 @@ def inject_corporate_css() -> None:
             border-radius: 10px;
             overflow: hidden;
             background: #FFFFFF;
-            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+            box-shadow: 0 1px 4px rgba(15, 23, 42, 0.05);
         }}
         .cti-table-scroll {{
             width: 100% !important;
             overflow-x: auto !important;
             -webkit-overflow-scrolling: touch;
         }}
+        .cti-table-scroll.has-vertical-scroll {{
+            max-height: 540px !important;
+            overflow-y: auto !important;
+        }}
         .cti-table-scroll::-webkit-scrollbar {{
+            width: 7px;
             height: 7px;
         }}
         .cti-table-scroll::-webkit-scrollbar-track {{
-            background: #F1F5F9;
+            background: #F8FAFC;
         }}
         .cti-table-scroll::-webkit-scrollbar-thumb {{
             background: #CBD5E1;
             border-radius: 4px;
         }}
         .cti-table-scroll::-webkit-scrollbar-thumb:hover {{
-            background: #94A3B8;
+            background: {PALETTE["primary"]};
         }}
         .cti-html-table {{
             width: 100% !important;
-            min-width: 1100px !important;
             table-layout: auto !important;
             border-collapse: separate !important;
             border-spacing: 0 !important;
             font-family: inherit;
             font-size: 0.78rem;
             line-height: 1.35;
+        }}
+        .cti-html-table.table-narrow {{
+            min-width: 100% !important;
+        }}
+        .cti-html-table.table-medium {{
+            min-width: 720px !important;
+        }}
+        .cti-html-table.table-wide {{
+            min-width: 1050px !important;
         }}
         .cti-html-table th {{
             background-color: {PALETTE["primary"]} !important;
@@ -362,17 +375,43 @@ def inject_corporate_css() -> None:
             text-align: right;
             white-space: nowrap !important;
             min-width: 75px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }}
+        .cti-html-table th.col-left {{
+            text-align: left !important;
+        }}
+        .cti-html-table th.col-center {{
+            text-align: center !important;
+        }}
+        .cti-html-table th.col-right {{
+            text-align: right !important;
         }}
         .cti-html-table th:first-child {{
-            text-align: left !important;
-            min-width: 250px !important;
-            width: 250px !important;
-            white-space: normal !important;
             position: sticky;
+            top: 0;
             left: 0;
-            z-index: 5;
+            z-index: 20;
             background-color: {PALETTE["primary"]} !important;
             box-shadow: 2px 0 5px rgba(0, 0, 0, 0.08);
+        }}
+        .cti-html-table.first-col-short th:first-child,
+        .cti-html-table.first-col-short td:first-child {{
+            min-width: 80px !important;
+            width: 80px !important;
+            max-width: 95px !important;
+        }}
+        .cti-html-table.first-col-med th:first-child,
+        .cti-html-table.first-col-med td:first-child {{
+            min-width: 140px !important;
+            width: 140px !important;
+            max-width: 165px !important;
+        }}
+        .cti-html-table.first-col-wide th:first-child,
+        .cti-html-table.first-col-wide td:first-child {{
+            min-width: 240px !important;
+            width: 240px !important;
         }}
         .cti-html-table th:last-child {{
             background-color: {PALETTE["primary_dark"]} !important;
@@ -389,18 +428,25 @@ def inject_corporate_css() -> None:
             white-space: nowrap !important;
             min-width: 75px;
         }}
-        .cti-html-table td:first-child {{
+        .cti-html-table td.col-left {{
             text-align: left !important;
+        }}
+        .cti-html-table td.col-center {{
+            text-align: center !important;
+        }}
+        .cti-html-table td.col-right {{
+            text-align: right !important;
+        }}
+        .cti-html-table td:first-child {{
             font-weight: 600;
             color: {PALETTE["neutral_dark"]};
-            min-width: 250px !important;
-            width: 250px !important;
             white-space: normal !important;
             line-height: 1.25 !important;
             position: sticky;
             left: 0;
-            z-index: 2;
+            z-index: 5;
             box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+            background-color: inherit;
         }}
         .cti-html-table td:last-child {{
             font-weight: 700;
@@ -414,7 +460,7 @@ def inject_corporate_css() -> None:
             background-color: #FFFFFF;
         }}
         .cti-html-table tr:hover td {{
-            background-color: #F1F5F9 !important;
+            background-color: #F0FDF4 !important;
         }}
         .cti-html-table tr.is-total td {{
             background-color: #ECFDF5 !important;
@@ -423,13 +469,44 @@ def inject_corporate_css() -> None:
             font-weight: 700 !important;
             color: {PALETTE["primary_dark"]} !important;
         }}
+        .cti-table-badge {{
+            display: inline-block;
+            padding: 0.14rem 0.52rem;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            white-space: nowrap;
+            line-height: 1.25;
+        }}
+        .cti-table-badge.success {{
+            background-color: #ECFDF5;
+            color: #065F46;
+            border: 1px solid #A7F3D0;
+        }}
+        .cti-table-badge.warning {{
+            background-color: #FFFBEB;
+            color: #92400E;
+            border: 1px solid #FDE68A;
+        }}
+        .cti-table-badge.danger {{
+            background-color: #FEF2F2;
+            color: #991B1B;
+            border: 1px solid #FECACA;
+        }}
+        .cti-table-badge.neutral {{
+            background-color: #F1F5F9;
+            color: #334155;
+            border: 1px solid #CBD5E1;
+        }}
 
-        /* Tabelas responsivas com rolagem interna isolada */
+        /* Tabelas nativas Streamlit estilizadas no padrão corporativo */
         [data-testid="stDataFrame"] {{
             width: 100% !important;
             overflow-x: auto !important;
             max-width: 100% !important;
+            border: 1px solid {PALETTE["primary"]} !important;
             border-radius: 8px !important;
+            box-shadow: 0 1px 3px rgba(11, 93, 59, 0.08) !important;
         }}
 
         /* Gráficos Plotly fluidos */
@@ -709,6 +786,39 @@ def calc_table_height(
     return max(min_height, min(calculated, max_height))
 
 
+def _get_table_col_align(col_name: str, col_idx: int) -> str:
+    """Retorna classe CSS de alinhamento para cada coluna da tabela corporativa."""
+    c_low = str(col_name).lower().strip()
+    if c_low in ("posição", "ano", "período", "n", "vif", "sentido", "piso/teto", "status", "classificação"):
+        return "col-center"
+    if col_idx == 0 or any(kw in c_low for kw in [
+        "cenário", "indicador", "demonstração", "rubrica", "descrição", "aba", "chave",
+        "variável", "preditor", "critério", "mapeamento", "tipo", "origem", "regra", "métrica"
+    ]):
+        return "col-left"
+    return "col-right"
+
+
+def _format_corporate_cell(val: Any) -> tuple[str, str]:
+    """Formata valor de célula com badges semânticos e sanitização HTML segura."""
+    if pd.isna(val) or str(val).strip().lower() in ("nan", "none", "<na>"):
+        return "—", "—"
+    raw_str = str(val).strip()
+    raw_low = raw_str.lower()
+
+    # Identificação de pílulas de status e classificação
+    if any(w in raw_low for w in ["validado", "conforme", "no alvo", "superada", "baixo risco", "normal", "ok", "ativo", "excelente"]):
+        return f'<span class="cti-table-badge success">{html.escape(raw_str)}</span>', raw_str
+    elif any(w in raw_low for w in ["atenção", "alerta", "abaixo da meta", "incompleto", "médio risco", "moderado"]):
+        return f'<span class="cti-table-badge warning">{html.escape(raw_str)}</span>', raw_str
+    elif any(w in raw_low for w in ["crítica", "erro", "desconforme", "alto risco", "reprovado"]):
+        return f'<span class="cti-table-badge danger">{html.escape(raw_str)}</span>', raw_str
+    elif any(w in raw_low for w in ["simulado", "premissa"]):
+        return f'<span class="cti-table-badge neutral">{html.escape(raw_str)}</span>', raw_str
+
+    return html.escape(raw_str), raw_str
+
+
 def render_corporate_table(
     df: pd.DataFrame,
     title: str = "",
@@ -716,17 +826,44 @@ def render_corporate_table(
     highlight_totals: bool = True,
     compact: bool = False,
 ) -> None:
-    """Renderiza uma tabela corporativa HTML nativa, 100% legível com rolagem horizontal suave e sem cortes."""
+    """Renderiza tabela corporativa CTI Global, 100% responsiva, com cabeçalhos verdes e design padronizado."""
     if df is None or len(df) == 0:
         render_empty_state()
         return
 
-    headers_html = "".join([
-        f'<th title="{html.escape(str(col))}">{html.escape(str(col))}</th>'
-        for col in df.columns
-    ])
+    # Determina classe de largura geral da tabela
+    num_cols = len(df.columns)
+    if num_cols <= 4:
+        table_width_cls = "table-narrow"
+    elif num_cols <= 7:
+        table_width_cls = "table-medium"
+    else:
+        table_width_cls = "table-wide"
 
-    total_keywords = ["total", "lucro líquido", "ebitda", "saldo final", "patrimônio líquido", "ativo total", "passivo total"]
+    # Determina largura da primeira coluna com base no conteúdo
+    first_col_name = str(df.columns[0])
+    first_col_vals = [str(v) for v in df.iloc[:, 0].dropna()[:30]]
+    max_len_first = max([len(first_col_name)] + [len(v) for v in first_col_vals]) if first_col_vals else len(first_col_name)
+    if max_len_first <= 8:
+        first_col_cls = "first-col-short"
+    elif max_len_first <= 16:
+        first_col_cls = "first-col-med"
+    else:
+        first_col_cls = "first-col-wide"
+
+    # Define se terá scroll vertical
+    scroll_vert_cls = " has-vertical-scroll" if len(df) > 20 else ""
+
+    # Cabeçalhos
+    headers_html = []
+    for col_idx, col in enumerate(df.columns):
+        align_cls = _get_table_col_align(str(col), col_idx)
+        headers_html.append(f'<th class="{align_cls}" title="{html.escape(str(col))}">{html.escape(str(col))}</th>')
+
+    total_keywords = [
+        "total", "lucro líquido", "ebitda", "saldo final", "patrimônio líquido",
+        "ativo total", "passivo total", "média", "acumulado", "subtotal"
+    ]
 
     rows_html = []
     for row_idx, (_, row) in enumerate(df.iterrows()):
@@ -736,12 +873,9 @@ def render_corporate_table(
 
         tds = []
         for col_idx, col in enumerate(df.columns):
-            raw_v = row[col]
-            if pd.isna(raw_v) or str(raw_v).strip().lower() in ("nan", "none", "<na>"):
-                val = "—"
-            else:
-                val = str(raw_v)
-            tds.append(f'<td title="{html.escape(val)}">{html.escape(val)}</td>')
+            align_cls = _get_table_col_align(str(col), col_idx)
+            val_html, val_plain = _format_corporate_cell(row[col])
+            tds.append(f'<td class="{align_cls}" title="{html.escape(val_plain)}">{val_html}</td>')
 
         rows_html.append(f'<tr{tr_class}>{"".join(tds)}</tr>')
 
@@ -750,41 +884,52 @@ def render_corporate_table(
         sub_html = f'<div style="font-size: 0.78rem; color: #64748B; margin-top: 0.15rem;">{html.escape(subtitle)}</div>' if subtitle else ""
         hdr_block = (
             f'<div style="padding: 0.65rem 0.9rem 0.4rem 0.9rem; border-bottom: 1px solid #E2E8F0; background: #F8FAFC;">'
-            f'<div style="font-weight: 700; font-size: 0.95rem; color: #0F172A;">{html.escape(title)}</div>'
+            f'<div style="font-weight: 700; font-size: 0.95rem; color: #0F172A; display: flex; align-items: center; gap: 0.4rem;">'
+            f'<span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #0B5D3B;"></span>'
+            f'{html.escape(title)}'
+            f'</div>'
             f'{sub_html}'
             f'</div>'
         )
 
-    table_html = f"""
-    <div class="cti-table-container">
-        {hdr_block}
-        <div class="cti-table-scroll">
-            <table class="cti-html-table">
-                <thead>
-                    <tr>{headers_html}</tr>
-                </thead>
-                <tbody>
-                    {''.join(rows_html)}
-                </tbody>
-            </table>
-        </div>
-    </div>
-    """
+    table_html = (
+        f'<div class="cti-table-container">'
+        f'{hdr_block}'
+        f'<div class="cti-table-scroll{scroll_vert_cls}">'
+        f'<table class="cti-html-table {table_width_cls} {first_col_cls}">'
+        f'<thead><tr>{"".join(headers_html)}</tr></thead>'
+        f'<tbody>{"".join(rows_html)}</tbody>'
+        f'</table></div></div>'
+    )
     st.markdown(table_html, unsafe_allow_html=True)
 
 
 def render_corporate_dataframe(
     df: pd.DataFrame,
+    title: str = "",
+    subtitle: str = "",
     use_container_width: bool = True,
     hide_index: bool = True,
     max_height: int = 1400,
     **kwargs: Any,
 ) -> None:
-    """Renderiza st.dataframe ajustando a altura calculada para exibir todas as linhas sem corte vertical."""
+    """Renderiza tabelas corporativas no padrão oficial CTI Global (com cabeçalhos verdes e dados completos)."""
     if df is None or len(df) == 0:
         render_empty_state()
         return
-    h = calc_table_height(df, max_height=max_height)
-    st.dataframe(df, use_container_width=use_container_width, hide_index=hide_index, height=h, **kwargs)
+
+    display_df = df.copy()
+    if not hide_index and not isinstance(display_df.index, pd.RangeIndex):
+        display_df = display_df.reset_index()
+    elif not hide_index and display_df.index.name:
+        display_df = display_df.reset_index()
+
+    render_corporate_table(
+        display_df,
+        title=title,
+        subtitle=subtitle,
+        highlight_totals=kwargs.get("highlight_totals", True),
+        compact=kwargs.get("compact", False),
+    )
 
 
