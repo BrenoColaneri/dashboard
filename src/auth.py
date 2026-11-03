@@ -208,41 +208,50 @@ def authenticate_credentials(username: str, password: str) -> tuple[bool, str]:
 
 
 def render_login_screen(expired_message: str = "") -> None:
-    """Renderiza a tela corporativa oficial de autenticação da CTI Global."""
+    """Renderiza a tela corporativa oficial de autenticação da CTI Global em um único card elegante e centralizado."""
     _init_auth_session_state()
 
-    # Injeção de CSS específico da tela de login para simetria e responsividade total
+    # Injeção de CSS específico da tela de login para simetria, centralização e responsividade total
     st.markdown(
         """
         <style>
-        /* Oculta completamente barra lateral e elementos do Streamlit na tela de login */
+        /* Fundo elegante e neutro para a tela de autenticação */
+        [data-testid="stAppViewContainer"] {
+            background: linear-gradient(180deg, #F8FAFC 0%, #F1F5F9 100%) !important;
+        }
+
+        /* Oculta completamente barra lateral e elementos desnecessários na tela de login */
         [data-testid="stSidebar"] {
             display: none !important;
         }
         [data-testid="collapsedControl"] {
             display: none !important;
         }
-        
-        /* Container central de login */
-        .cti-login-wrapper {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 80vh;
-            padding: 20px 16px;
+        header[data-testid="stHeader"] {
+            background: transparent !important;
         }
-        .cti-login-card {
-            width: 100%;
-            max-width: 440px;
-            background: #FFFFFF;
-            border: 1px solid #E2E8F0;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
-            padding: 36px 32px;
-            margin: 0 auto;
-            text-align: left;
+
+        /* Centralização vertical e horizontal do container principal */
+        .block-container {
+            max-width: 480px !important;
+            padding-top: 7vh !important;
+            padding-bottom: 6vh !important;
+            margin: 0 auto !important;
         }
-        .cti-login-header {
+
+        /* O CARD ÚNICO INTEGRADO DE AUTENTICAÇÃO */
+        [data-testid="stForm"] {
+            background: #FFFFFF !important;
+            border: 1px solid #E2E8F0 !important;
+            border-radius: 20px !important;
+            box-shadow: 0 20px 45px -10px rgba(11, 93, 59, 0.10), 0 8px 20px -4px rgba(15, 23, 42, 0.04) !important;
+            padding: 40px 36px 30px 36px !important;
+            width: 100% !important;
+            margin: 0 auto !important;
+        }
+
+        /* Cabeçalho integrado dentro do card */
+        .cti-login-inner-header {
             text-align: center;
             margin-bottom: 24px;
         }
@@ -250,52 +259,112 @@ def render_login_screen(expired_message: str = "") -> None:
             display: inline-block;
             background: #ECFDF5;
             color: #0B5D3B;
-            font-size: 0.78rem;
+            font-size: 0.74rem;
             font-weight: 700;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.09em;
             text-transform: uppercase;
-            padding: 4px 12px;
-            border-radius: 20px;
+            padding: 5px 14px;
+            border-radius: 9999px;
             border: 1px solid #A7F3D0;
             margin-bottom: 12px;
         }
-        .cti-login-title {
+        .cti-login-headline {
             color: #0F172A;
-            font-size: 1.45rem;
+            font-size: 1.55rem;
             font-weight: 700;
-            margin: 0 0 6px 0;
-            letter-spacing: -0.02em;
+            margin: 0 0 8px 0;
+            letter-spacing: -0.025em;
+            line-height: 1.25;
         }
-        .cti-login-subtitle {
+        .cti-login-subheadline {
             color: #64748B;
             font-size: 0.88rem;
-            line-height: 1.4;
+            line-height: 1.45;
             margin: 0;
         }
-        .cti-login-divider {
-            height: 1px;
-            background: #E2E8F0;
-            margin: 20px 0 24px 0;
+
+        /* Estilização refinada e simétrica dos campos de entrada */
+        [data-testid="stTextInput"] {
+            margin-bottom: 14px !important;
         }
-        .cti-login-footer {
-            margin-top: 24px;
+        [data-testid="stTextInput"] label p {
+            font-size: 0.86rem !important;
+            font-weight: 600 !important;
+            color: #334155 !important;
+            margin-bottom: 5px !important;
+        }
+        [data-testid="stTextInput"] input {
+            border-radius: 10px !important;
+            border: 1px solid #CBD5E1 !important;
+            background-color: #F8FAFC !important;
+            font-size: 0.94rem !important;
+            padding: 10px 14px !important;
+            height: 44px !important;
+            transition: all 0.2s ease-in-out !important;
+        }
+        [data-testid="stTextInput"] input:focus {
+            border-color: #0B5D3B !important;
+            background-color: #FFFFFF !important;
+            box-shadow: 0 0 0 3px rgba(11, 93, 59, 0.14) !important;
+            outline: none !important;
+        }
+
+        /* Botão Entrar em verde institucional destacado */
+        [data-testid="stFormSubmitButton"] button {
+            background: #0B5D3B !important;
+            color: #FFFFFF !important;
+            border: none !important;
+            border-radius: 10px !important;
+            font-weight: 600 !important;
+            font-size: 1rem !important;
+            height: 46px !important;
+            letter-spacing: 0.01em !important;
+            box-shadow: 0 4px 14px rgba(11, 93, 59, 0.25) !important;
+            transition: all 0.2s ease-in-out !important;
+            margin-top: 8px !important;
+        }
+        [data-testid="stFormSubmitButton"] button:hover {
+            background: #064E3B !important;
+            box-shadow: 0 6px 18px rgba(11, 93, 59, 0.35) !important;
+            transform: translateY(-1px) !important;
+        }
+        [data-testid="stFormSubmitButton"] button:active {
+            transform: translateY(0) !important;
+            box-shadow: 0 2px 6px rgba(11, 93, 59, 0.2) !important;
+        }
+
+        /* Rodapé institucional integrado dentro do card */
+        .cti-login-inner-footer {
+            margin-top: 22px;
+            padding-top: 18px;
+            border-top: 1px solid #F1F5F9;
             text-align: center;
-            font-size: 0.78rem;
+            font-size: 0.76rem;
             color: #94A3B8;
-            line-height: 1.5;
+            line-height: 1.45;
         }
-        .cti-login-footer strong {
+        .cti-login-inner-footer strong {
             color: #0B5D3B;
+            font-weight: 600;
         }
-        
-        /* Ajustes responsivos para telas pequenas */
+
+        /* Responsividade para celulares e telas pequenas */
         @media (max-width: 480px) {
-            .cti-login-card {
-                padding: 24px 20px;
-                border-radius: 12px;
+            .block-container {
+                padding-top: 2.5rem !important;
+                padding-bottom: 2rem !important;
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
             }
-            .cti-login-title {
-                font-size: 1.25rem;
+            [data-testid="stForm"] {
+                padding: 28px 22px 24px 22px !important;
+                border-radius: 16px !important;
+            }
+            .cti-login-headline {
+                font-size: 1.35rem !important;
+            }
+            .cti-login-subheadline {
+                font-size: 0.82rem !important;
             }
         }
         </style>
@@ -307,65 +376,63 @@ def render_login_screen(expired_message: str = "") -> None:
     if expired_message:
         st.warning(f"⚠️ {expired_message}")
 
-    # Layout centralizado usando colunas do Streamlit
-    col_left, col_center, col_right = st.columns([1, 2.2, 1])
-
-    with col_center:
+    # Card único integrado dentro do formulário
+    with st.form("cti_corporate_login_form", clear_on_submit=False):
+        # 1. Cabeçalho integrado no topo do card
         st.markdown(
             """
-            <div class="cti-login-card">
-                <div class="cti-login-header">
-                    <span class="cti-login-badge">CTI GLOBAL</span>
-                    <h2 class="cti-login-title">Bem-vindo à CTI Global</h2>
-                    <p class="cti-login-subtitle">Faça login para acessar a plataforma de planejamento financeiro.</p>
-                </div>
-                <div class="cti-login-divider"></div>
+            <div class="cti-login-inner-header">
+                <span class="cti-login-badge">CTI GLOBAL</span>
+                <h1 class="cti-login-headline">Bem-vindo à CTI Global</h1>
+                <p class="cti-login-subheadline">Faça login para acessar a plataforma analítica de planejamento financeiro.</p>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
-        with st.form("cti_corporate_login_form", clear_on_submit=False):
-            username_input = st.text_input(
-                "Usuário:",
-                placeholder="Digite seu usuário",
-                key="login_user_input",
-                autocomplete="username",
-            )
+        # 2. Campos de Usuário e Senha padronizados
+        username_input = st.text_input(
+            "Usuário:",
+            placeholder="Digite seu usuário",
+            key="login_user_input",
+            autocomplete="username",
+        )
 
-            password_input = st.text_input(
-                "Senha:",
-                type="password",
-                placeholder="Digite sua senha",
-                key="login_pass_input",
-                autocomplete="current-password",
-                help="A senha é verificada no backend de forma segura via criptografia bcrypt.",
-            )
+        password_input = st.text_input(
+            "Senha:",
+            type="password",
+            placeholder="Digite sua senha",
+            key="login_pass_input",
+            autocomplete="current-password",
+        )
 
-            submit_btn = st.form_submit_button(
-                "Entrar",
-                use_container_width=True,
-                type="primary",
-                key="cti_corporate_login_form_submit",
-            )
+        # 3. Botão Entrar com destaque visual corporativo
+        submit_btn = st.form_submit_button(
+            "Entrar",
+            use_container_width=True,
+            type="primary",
+            key="cti_corporate_login_form_submit",
+        )
 
-            if submit_btn:
-                try:
-                    with st.spinner("Autenticando credenciais corporativas..."):
-                        success, message = authenticate_credentials(username_input, password_input)
-                    
-                    if success:
-                        st.success("Acesso autorizado com sucesso! Redirecionando...")
-                        time.sleep(0.15)
-                        st.rerun()
-                    else:
-                        st.error(f"❌ {message}")
-                except Exception:
-                    st.error("❌ Não foi possível realizar o acesso neste momento. Tente novamente.")
+        # 4. Processamento da autenticação
+        if submit_btn:
+            try:
+                with st.spinner("Autenticando credenciais corporativas..."):
+                    success, message = authenticate_credentials(username_input, password_input)
 
+                if success:
+                    st.success("Acesso autorizado com sucesso! Redirecionando...")
+                    time.sleep(0.15)
+                    st.rerun()
+                else:
+                    st.error(f"❌ {message}")
+            except Exception:
+                st.error("❌ Não foi possível realizar o acesso neste momento. Tente novamente.")
+
+        # 5. Rodapé institucional integrado no mesmo card
         st.markdown(
             """
-            <div class="cti-login-footer">
+            <div class="cti-login-inner-footer">
                 <strong>CTI Global</strong> • Plataforma Analítica de Planejamento Financeiro<br>
                 <span>Acesso restrito e monitorado por controladoria institucional.</span>
             </div>

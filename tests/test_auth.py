@@ -171,3 +171,4 @@ def test_apptest_login_flow_and_dashboard_unlock() -> None:
     # Dashboard desbloqueado com sucesso!
     assert at.session_state["is_authenticated"] is True
     assert len(at.sidebar.radio) > 0  # Navegação das 17 páginas liberada
+
