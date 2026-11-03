@@ -307,6 +307,7 @@ def render_login_screen(expired_message: str = "") -> None:
 
         /* -------------------------------------------------------------
            2. LADO ESQUERDO: APRESENTAÇÃO INSTITUCIONAL (55% DA LARGURA)
+              FUNDO BRANCO COM DETALHES CORPORATIVOS EM VERDE
            ------------------------------------------------------------- */
         [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:first-child {
             width: 55vw !important;
@@ -314,15 +315,14 @@ def render_login_screen(expired_message: str = "") -> None:
             flex: 55 1 0% !important;
             height: 100vh !important;
             height: 100dvh !important;
-            background: radial-gradient(circle at 18% 25%, rgba(52, 211, 153, 0.12) 0%, transparent 45%),
-                        linear-gradient(145deg, #043826 0%, #064E3B 45%, #0B5D3B 100%) !important;
+            background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%) !important;
             display: flex !important;
             flex-direction: column !important;
             justify-content: center !important;
             align-items: center !important;
             padding: 3rem 4.5rem !important;
             box-sizing: border-box !important;
-            border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-right: 1px solid #E2E8F0 !important;
             overflow: hidden !important;
             position: relative !important;
         }
@@ -339,40 +339,40 @@ def render_login_screen(expired_message: str = "") -> None:
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: rgba(6, 78, 59, 0.85);
-            color: #A7F3D0;
+            background: #ECFDF5;
+            color: #0B5D3B;
             font-size: 0.76rem;
             font-weight: 700;
             letter-spacing: 0.12em;
             text-transform: uppercase;
             padding: 6px 14px;
             border-radius: 9999px;
-            border: 1px solid rgba(167, 243, 208, 0.35);
+            border: 1px solid #A7F3D0;
             margin-bottom: 1.25rem;
             width: fit-content;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 1px 3px rgba(11, 93, 59, 0.08);
         }
         .cti-inst-brand-dot {
             width: 7px;
             height: 7px;
             border-radius: 50%;
-            background: #34D399;
-            box-shadow: 0 0 6px #34D399;
+            background: #10B981;
+            box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
         }
 
         .cti-inst-headline {
-            color: #FFFFFF;
-            font-size: 1.95rem;
-            font-weight: 700;
+            color: #064E3B !important;
+            font-size: 2.05rem;
+            font-weight: 800;
             line-height: 1.22;
             letter-spacing: -0.025em;
             margin: 0 0 0.85rem 0;
         }
 
         .cti-inst-lead {
-            color: #E2E8F0;
-            font-size: 0.95rem;
-            line-height: 1.55;
+            color: #475569;
+            font-size: 0.96rem;
+            line-height: 1.6;
             margin: 0 0 1.75rem 0;
             font-weight: 400;
         }
@@ -389,45 +389,46 @@ def render_login_screen(expired_message: str = "") -> None:
             display: flex;
             align-items: center;
             gap: 14px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
             border-radius: 12px;
             padding: 12px 16px;
             box-sizing: border-box;
-            backdrop-filter: blur(4px);
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
             transition: all 0.2s ease;
         }
         .cti-inst-feature-card:hover {
-            background: rgba(255, 255, 255, 0.07);
-            border-color: rgba(52, 211, 153, 0.3);
+            background: #F0FDF4;
+            border-color: #A7F3D0;
             transform: translateX(3px);
+            box-shadow: 0 4px 12px rgba(11, 93, 59, 0.08);
         }
 
         .cti-inst-feature-icon {
             flex-shrink: 0;
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            background: rgba(52, 211, 153, 0.12);
-            border: 1px solid rgba(52, 211, 153, 0.25);
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: #ECFDF5;
+            border: 1px solid #A7F3D0;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #34D399;
+            color: #0B5D3B;
         }
 
         .cti-inst-feature-title {
-            color: #FFFFFF;
-            font-size: 0.88rem;
-            font-weight: 600;
+            color: #064E3B;
+            font-size: 0.90rem;
+            font-weight: 700;
             margin-bottom: 2px;
             line-height: 1.3;
         }
 
         .cti-inst-feature-desc {
-            color: #CBD5E1;
-            font-size: 0.78rem;
-            line-height: 1.38;
+            color: #64748B;
+            font-size: 0.80rem;
+            line-height: 1.4;
             margin: 0;
         }
 
@@ -585,7 +586,8 @@ def render_login_screen(expired_message: str = "") -> None:
                 max-height: none !important;
                 padding: 1.5rem 1.25rem 1.25rem 1.25rem !important;
                 border-right: none !important;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+                border-bottom: 1px solid #E2E8F0 !important;
+                background: #FFFFFF !important;
             }
 
             .cti-inst-content-box {
@@ -597,6 +599,7 @@ def render_login_screen(expired_message: str = "") -> None:
                 margin: 0 auto 0.6rem auto;
             }
             .cti-inst-headline {
+                color: #064E3B !important;
                 font-size: 1.3rem !important;
                 margin-bottom: 0.3rem !important;
                 text-align: center;
@@ -649,7 +652,7 @@ def render_login_screen(expired_message: str = "") -> None:
                 <div class="cti-inst-feature-list">
                     <div class="cti-inst-feature-card">
                         <div class="cti-inst-feature-icon">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B5D3B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="18" y1="20" x2="18" y2="10"></line>
                                 <line x1="12" y1="20" x2="12" y2="4"></line>
                                 <line x1="6" y1="20" x2="6" y2="14"></line>
@@ -662,7 +665,7 @@ def render_login_screen(expired_message: str = "") -> None:
                     </div>
                     <div class="cti-inst-feature-card">
                         <div class="cti-inst-feature-icon">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B5D3B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <circle cx="12" cy="12" r="10"></circle>
                                 <polyline points="12 6 12 12 14 14"></polyline>
                             </svg>
@@ -674,7 +677,7 @@ def render_login_screen(expired_message: str = "") -> None:
                     </div>
                     <div class="cti-inst-feature-card">
                         <div class="cti-inst-feature-icon">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B5D3B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                             </svg>
                         </div>
