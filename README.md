@@ -8,10 +8,11 @@ Plataforma corporativa analítica de Business Intelligence, Controladoria, Plane
 
 Este sistema integra, audita e analisa a base de dados corporativa oficial da CTI Global (`Contabilidade e Finanças.xlsx`, composta por **9 abas**, **1.200 cenários corporativos** `Cen_00001` a `Cen_01200` e **12 períodos numerados** `Ano 1` a `Ano 12`), oferecendo suporte executivo à tomada de decisão financeira e operacional:
 
-- **Painel Executivo e Demonstrações Financeiras Integradas:** Visão Executiva corporativa, DRE (com segregação estrita entre `EBITDA Calculado` e `EBITDA do Modelo`), Balanço Patrimonial e Fluxo de Caixa (DFC, distinguindo lucro contábil por competência de geração efetiva de caixa).
-- **Catálogo Auditado de KPIs, Rankings e Evolução Temporal:** Consulta estruturada por categoria, posicionamento nos 5 recortes de `Top10_Rankings`, comparador multicenário e evolução `Ano 1` a `Ano 12` com tratamento transparente do `Ano 12` patrimonial incompleto (`N/D`).
+- **Painel Executivo e Demonstrações Financeiras Integradas:** Visão Executiva corporativa, DRE (com segregação estrita entre `EBITDA Calculado` e `EBITDA do Modelo`), Balanço Patrimonial, Fluxo de Caixa (DFC gerencial e conciliada no regime de caixa) e Demonstração do Valor Adicionado (DVA com distribuição aos empregados, governo, credores e acionistas).
+- **Módulos Especializados da DFC e Capital de Giro:** Índices da Demonstração dos Fluxos de Caixa (Qualidade do Caixa, Investimentos/Capex, Capacidade de Pagamento e Sustentabilidade de Dividendos), além de Capital de Giro e Prazos Médios (CCL, PMR, PMP, Ciclo Financeiro Simplificado e Necessidade de Capital de Giro).
+- **Catálogo Auditado de 62 KPIs, Rankings e Evolução Temporal:** Consulta estruturada por categoria/família contábil, posicionamento nos 5 recortes de `Top10_Rankings`, comparador multicenário e evolução `Ano 1` a `Ano 12` com tratamento transparente do `Ano 12` patrimonial incompleto (`N/D`).
 - **Planejamento Operacional e Simulações em Memória:** Análise de sensibilidade financeira interativa (desconto comercial, cupom/preço, volume, custos fixos/variáveis e WACC), metas financeiras corporativas configuráveis (sem metas artificiais pré-inventadas) e simulador parametrizado de Ticket Médio, CAC, LTV e Unit Economics.
-- **Ciência de Dados e Governança:** Estatística descritiva e inferencial reconciliada em `100%` com `KPIs_Estatisticas`, matriz de correlação, regressão linear múltipla (OLS) com partição Treino/Teste agrupada por `Cenário` (`GroupShuffleSplit`), diagnósticos econométricos (VIF, Jarque-Bera, Breusch-Pagan, erros-padrão robustos) e central de relatórios gerenciais em **CSV**, **XLSX multi-abas** e **PDF executivo**.
+- **Ciência de Dados e Governança:** Estatística descritiva e inferencial reconciliada em `100%` com `KPIs_Estatisticas`, matriz de correlação, regressão linear múltipla (OLS) com partição Treino/Teste agrupada por `Cenário` (`GroupShuffleSplit`), diagnósticos econométricos (VIF, Jarque-Bera, Breusch-Pagan, erros-padrão robustos), central de relatórios gerenciais em **CSV**, **XLSX multi-abas** e **PDF executivo**, e Dicionário Corporativo dos 62 KPIs.
 
 ---
 
@@ -39,10 +40,10 @@ DASHBOARD/
 ├── .streamlit/
 │   └── config.toml                     # Tema institucional corporativo (verde-escuro #0B5D3B) e segurança
 ├── src/
-│   ├── config.py                       # Catálogo auditado dos 22 KPIs, paleta corporativa e formatadores pt-BR
+│   ├── config.py                       # Catálogo auditado dos 62 KPIs, paleta corporativa e formatadores pt-BR
 │   ├── data_loader.py                  # Descoberta segura do Excel, upload em memória e cache Parquet (Staging)
 │   ├── data_processing.py              # Pipeline Staging -> Processed (Painel 14.400 vs Resumo 1.200)
-│   ├── financial_kpis.py               # Motor de recálculo contábil, safe_divide, metas e auditoria de Ticket Médio
+│   ├── financial_kpis.py               # Motor de cálculo dos 62 KPIs (DFC, Capital de Giro, Fluxo e DVA)
 │   ├── data_validation.py              # Validação estrutural, reconciliação 100% e auditoria AUD-01 a AUD-05
 │   ├── sensitivity_analysis.py         # Simulador de sensibilidade em memória e Unit Economics (Ticket/CAC/LTV)
 │   ├── statistical_analysis.py         # Estatística descritiva, reconciliação KPIs_Estatisticas e correlações
@@ -50,18 +51,20 @@ DASHBOARD/
 │   ├── reporting.py                    # Geradores de relatórios CSV, Excel multi-abas e PDF executivo
 │   ├── ui_components.py                # Design system CSS responsivo (360px a 1920px) e cartões de KPI
 │   ├── charts.py                       # Fábrica de gráficos interativos Plotly padronizados
-│   └── views/                          # Módulos das 14 páginas corporativas
-│       ├── executive_and_statements.py # Páginas 1 a 4 (Visão Executiva, DRE, Balanço, Fluxo de Caixa)
-│       ├── kpis_scenarios_evolution.py # Páginas 5 a 7 (Indicadores, Cenários & Rankings, Evolução Financeira)
-│       ├── planning_simulation_goals.py# Páginas 8 a 10 (Sensibilidade, Metas, Ticket Médio & Unit Economics)
-│       └── datascience_quality_exports.py # Páginas 11 a 14 (Estatística, OLS, Governança & Relatórios)
+│   └── views/                          # Módulos das 17 páginas corporativas
+│       ├── executive_and_statements.py # Páginas 1 a 3 (Visão Executiva, DRE, Balanço Patrimonial)
+│       ├── cashflow_workingcapital_dva.py # Páginas 4, 5, 7 e 8 (Fluxo de Caixa, DVA, Índices DFC e Capital de Giro)
+│       ├── kpis_scenarios_evolution.py # Páginas 6, 9 e 10 (Indicadores, Cenários & Rankings, Evolução Financeira)
+│       ├── planning_simulation_goals.py# Páginas 11, 12 e 17 (Sensibilidade, Metas, Metodologia & Indicadores)
+│       └── datascience_quality_exports.py # Páginas 13 a 16 (Estatística, OLS, Relatórios & Governança)
 ├── tests/
 │   ├── conftest.py                     # Fixtures compartilhadas sobre a base corporativa oficial
 │   ├── test_data_loading.py            # Testes de leitura, abas essenciais, erros e modo sintético isolado
 │   ├── test_financial_kpis.py          # Reconciliação 100%, Ano 12 N/D, safe_divide, DFC e metas
+│   ├── test_dfc_capital_dva.py         # Testes dos 4 novos módulos (DFC, Giro, Fluxo, DVA) e identidades contábeis
 │   ├── test_sensitivity.py             # Testes de choques econômicos, imutabilidade da base e LTV/CAC
 │   ├── test_filters.py                 # Testes de filtros, KPIs_Estatisticas, OLS sem vazamento e exportações
-│   └── test_app_ui.py                  # Teste E2E Headless renderizando todas as 14 páginas corporativas
+│   └── test_app_ui.py                  # Teste E2E Headless renderizando todas as 17 páginas corporativas
 ├── docs/
 │   ├── catalogo_dados.md               # Inventário das 9 abas e arquitetura Raw -> Staging -> Processed
 │   ├── dicionario_kpis.md              # Fichas completas dos KPIs com fórmulas, regras e interpretações
@@ -120,7 +123,7 @@ Acesse no navegador: `http://localhost:8501`
 .\.venv\Scripts\python.exe -m pytest -v
 ```
 
-A suíte executa testes automatizados cobrindo leitura de dados, reconciliação de `100%` dos KPIs com `KPIs_Cenarios`, `Resumo_Cenarios` e `KPIs_Estatisticas`, proteção contra divisão por zero, tratamento de `N/D` no `Ano 12`, imutabilidade na análise de sensibilidade, ausência de vazamento entre cenários na regressão OLS, validade de arquivos CSV/XLSX/PDF e renderização ponta a ponta das **14 páginas corporativas** via `AppTest`.
+A suíte executa testes automatizados cobrindo leitura de dados, reconciliação de `100%` dos KPIs com `KPIs_Cenarios`, `Resumo_Cenarios` e `KPIs_Estatisticas`, cálculo dos 4 novos módulos e suas identidades contábeis, proteção contra divisão por zero, tratamento de `N/D` no `Ano 12`, imutabilidade na análise de sensibilidade, ausência de vazamento entre cenários na regressão OLS, validade de arquivos CSV/XLSX/PDF e renderização ponta a ponta das **17 páginas corporativas** via `AppTest`.
 
 ---
 

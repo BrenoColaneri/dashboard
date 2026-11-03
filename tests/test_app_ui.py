@@ -1,4 +1,4 @@
-"""Teste funcional ponta a ponta (E2E Headless) de todas as 14 páginas da interface Streamlit."""
+"""Teste funcional ponta a ponta (E2E Headless) de todas as 17 páginas da interface Streamlit."""
 
 from __future__ import annotations
 
@@ -9,16 +9,16 @@ from streamlit.testing.v1 import AppTest
 from app import PAGES
 
 
-def test_all_14_dashboard_pages_render_without_exceptions() -> None:
+def test_all_17_dashboard_pages_render_without_exceptions() -> None:
     app_path = str(Path(__file__).resolve().parent.parent / "app.py")
     at = AppTest.from_file(app_path, default_timeout=60)
     at.run()
     assert len(at.exception) == 0, f"Exceção na carga inicial: {at.exception}"
 
-    # Valida que exatamente as 14 páginas corporativas estão cadastradas
-    assert len(PAGES) == 14
+    # Valida que exatamente as 17 páginas corporativas estão cadastradas
+    assert len(PAGES) == 17
 
-    # Navega sequencialmente pelas 14 páginas verificando ausência total de erros em runtime
+    # Navega sequencialmente pelas 17 páginas verificando ausência total de erros em runtime
     for page_label in PAGES:
         at.sidebar.radio(key="nav_page_radio").set_value(page_label)
         at.run()
@@ -34,10 +34,14 @@ def test_quick_navigation_buttons_transition_correctly() -> None:
     quick_targets = [
         ("quick_dre", "2. DRE"),
         ("quick_balanco", "3. Balanço"),
-        ("quick_kpis", "5. Indicadores"),
-        ("quick_sens", "8. Análise"),
-        ("quick_stat", "11. Análise"),
-        ("quick_rep", "14. Relatórios"),
+        ("quick_fluxo", "4. Fluxo"),
+        ("quick_dva", "5. Demonstração"),
+        ("quick_kpis", "6. Indicadores"),
+        ("quick_dfc", "7. Índices"),
+        ("quick_giro", "8. Capital"),
+        ("quick_sens", "11. Análise"),
+        ("quick_stat", "13. Análise"),
+        ("quick_rep", "15. Relatórios"),
     ]
 
     for btn_key, expected_prefix in quick_targets:

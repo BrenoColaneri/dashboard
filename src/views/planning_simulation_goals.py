@@ -44,6 +44,7 @@ from src.sensitivity_analysis import (
 from src.ui_components import (
     render_callout,
     render_corporate_dataframe,
+    render_corporate_table,
     render_data_footer,
     render_empty_state,
     render_kpi_grid,
@@ -472,283 +473,333 @@ def render_page_metas(
     render_data_footer(store)
 
 
-def render_page_ticket_simulados(
+def render_page_metodologia_indicadores(
     store: ProcessedDataStore,
     active_scenario: str,
     period_range: tuple[int, int],
 ) -> None:
-    """Página 10 — Auditoria de Ticket Médio e Simulador Integrado de Unit Economics (CAC, LTV, LTV/CAC)."""
+    """Página 17 — Metodologia, Dicionário Corporativo dos 62 KPIs e Diagnóstico de Unit Economics."""
     render_top_header(
-        title="Ticket Médio e Indicadores Simulados — Auditoria e Unit Economics",
+        title="Metodologia e Indicadores — Dicionário Corporativo e Governança Analítica",
         subtitle=(
-            "Diagnóstico técnico sobre a indisponibilidade de Ticket Médio empírico na base contábil original "
-            "e simulador parametrizado de Ticket Médio, CAC, LTV e LTV/CAC conforme Dicionario_KPIs."
+            "Catálogo metodológico completo dos 62 indicadores financeiros e operacionais da CTI Global, "
+            "diagnóstico de aderência contábil e simulador integrado de Unit Economics conforme premissas do modelo."
         ),
         store=store,
         active_scenario=active_scenario,
         period_range=period_range,
-        extra_pill="Premissas Explícitas de Simulação",
     )
 
-    audit_tm = investigate_ticket_medio(store.bundle.sheets)
+    tabs = st.tabs([
+        "📚 Dicionário e Metodologia dos 62 KPIs",
+        "🔍 Diagnóstico: Ticket Médio na Base Original",
+        "🎯 Simulador Parametrizado de Unit Economics",
+    ])
 
-    # Bloco 1: Diagnóstico transparente do Ticket Médio na base original
-    render_section_header(
-        "1. Diagnóstico Técnico: Ticket Médio na Planilha Original",
-        "Verificação automatizada de todas as 9 abas e 160+ colunas da base Contabilidade e Finanças.xlsx.",
-    )
-    top_cards = [
-        {
-            "label": "Ticket Médio Observado (Base Real)",
-            "value_fmt": "N/D (Indisponível)",
-            "subtitle": "Sem dados de pedidos, volume físico ou nº de clientes",
-            "delta_text": "Verificado nas 9 abas da planilha original",
-            "delta_status": "warning",
-            "badge_text": "Não Calculável na Fonte",
-            "badge_type": "warning",
-            "card_variant": "is-warning",
-            "tooltip": "Jamais inventamos um ticket médio observado sem denominador transacional real.",
-        },
-        {
-            "label": "CAC de Referência (Base Corporativa)",
-            "value_fmt": f"{format_currency_brl(CAC_SIMULATED_PREMISE)}/cliente",
-            "subtitle": "Constante nos 1.200 cenários (Resumo_Cenarios)",
-            "delta_text": "Premissa simulada documentada",
-            "delta_status": "simulated",
-            "badge_text": "Premissa do Modelo",
-            "badge_type": "simulated",
-            "card_variant": "is-simulated",
-        },
-        {
-            "label": "LTV de Referência (Base Corporativa)",
-            "value_fmt": f"{format_currency_brl(LTV_SIMULATED_PREMISE)}/cliente",
-            "subtitle": "Ticket × Compras/Ano × Vida Média × Margem",
-            "delta_text": "Premissa simulada documentada",
-            "delta_status": "simulated",
-            "badge_text": "Premissa do Modelo",
-            "badge_type": "simulated",
-            "card_variant": "is-simulated",
-        },
-        {
-            "label": "LTV / CAC e WACC (Base Corporativa)",
-            "value_fmt": format_multiple_br(LTV_CAC_SIMULATED_PREMISE),
-            "subtitle": f"WACC do modelo: {format_pct_br(WACC_MODEL_PREMISE)} a.a.",
-            "delta_text": "R$ 2.100,00 / R$ 200,00 = 10,50x",
-            "delta_status": "simulated",
-            "badge_text": "Premissa do Modelo",
-            "badge_type": "simulated",
-            "card_variant": "is-simulated",
-        },
-    ]
-    render_kpi_grid(top_cards)
+    with tabs[0]:
+        st.markdown(
+            "Consulte o catálogo oficial de todos os **62 indicadores** calculados e auditados na plataforma da CTI Global, "
+            "incluindo fórmulas metodológicas, unidade de medida, contas de origem contábil e orientações gerenciais."
+        )
+        col_f1, col_f2 = st.columns([1, 2])
+        all_cats = ["Todas as Categorias"] + list(dict.fromkeys(m.category for m in KPI_CATALOG.values()))
+        with col_f1:
+            sel_cat = st.selectbox("Filtrar por Categoria / Família:", options=all_cats, key="dict_cat_sel")
+        with col_f2:
+            search_kpi = st.text_input("Buscar indicador por nome, código ou conceito:", key="dict_search_txt")
 
-    req_list_html = "".join(f"<li>{item}</li>" for item in audit_tm["required_fields_for_real_calculation"])
-    render_callout(
-        "Por que o Ticket Médio real é exibido como N/D e quais dados seriam necessários?",
-        f"A auditoria programática confirmou que a planilha da CTI contém exclusivamente demonstrações financeiras "
-        f"contábeis agregadas (DRE, Balanço Patrimonial e DFC), sem colunas transacionais comerciais. "
-        f"No <code>Dicionario_KPIs</code>, o termo <em>Ticket médio</em> aparece apenas como componente conceitual da "
-        f"fórmula simulada do <strong>LTV simulado</strong> (<code>Ticket médio × Compras/ano × Vida média × Margem %</code>).<br>"
-        f"<strong>Dados necessários para cálculo empírico futuro:</strong><ul>{req_list_html}</ul>",
-        kind="info",
-    )
-
-    # Bloco 2: Simulador editável de Ticket Médio, LTV e CAC
-    render_section_header(
-        "2. Simulador Parametrizado de Ticket Médio e Unit Economics (Claramente Identificado como Simulação)",
-        "Insira premissas comerciais explícitas para estimar Ticket Médio, Receita por Cliente, LTV, CAC, LTV/CAC e Payback.",
-    )
-
-    df_scen = filter_panel(store.panel, scenarios=active_scenario, period_range=period_range)
-    summ = summarize_kpis_for_selection(df_scen)
-    mc_obs = summ["margem_contribuicao"]["mean"]
-    rec_obs = summ["receita"]["mean"]
-
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        ticket_sim = st.number_input(
-            "Premissa de Ticket Médio por Transação (R$)",
-            min_value=1.0,
-            max_value=100_000_000.0,
-            value=350.0,
-            step=25.0,
-            help="Valor médio hipotético por fatura/pedido emitido.",
-        )
-        compras_ano = st.number_input(
-            "Frequência Média de Compras / Faturas por Ano",
-            min_value=0.1,
-            max_value=365.0,
-            value=2.0,
-            step=0.5,
-        )
-    with c2:
-        vida_anos = st.number_input(
-            "Vida Média / Retenção do Cliente (Anos)",
-            min_value=0.25,
-            max_value=30.0,
-            value=3.75,
-            step=0.25,
-        )
-        use_obs_margin = st.checkbox(
-            f"Usar Margem de Contribuição observada de {active_scenario} ({format_pct_br(mc_obs)})",
-            value=False,
-        )
-        if use_obs_margin and is_valid_number(mc_obs):
-            margem_ltv = float(np.clip(mc_obs * 100.0, 0.0, 100.0))
-            st.caption(f"Margem aplicada automaticamente: **{format_pct_br(mc_obs)}**")
-        else:
-            margem_ltv = st.slider(
-                "Margem de Contribuição p/ LTV (%)",
-                min_value=5.0,
-                max_value=100.0,
-                value=80.0,
-                step=1.0,
-                help="Com Ticket R$ 350 × 2,0 compras/ano × 3,75 anos × 80% = R$ 2.100,00 (referência da base corporativa).",
-            )
-    with c3:
-        modo_cac_lbl = st.radio(
-            "Modo de Parametrização do CAC Simulado:",
-            options=["Informar CAC unitário direto (R$/cliente)", "Calcular via Investimento / Novos Clientes"],
-        )
-        if modo_cac_lbl.startswith("Informar"):
-            modo_cac = "direto"
-            cac_dir = st.number_input(
-                "CAC Unitário Simulado (R$/cliente)",
-                min_value=1.0,
-                max_value=10_000_000.0,
-                value=float(CAC_SIMULATED_PREMISE),
-                step=10.0,
-            )
-            inv_aq, nov_cli = 200_000.0, 1000
-        else:
-            modo_cac = "investimento_clientes"
-            cac_dir = CAC_SIMULATED_PREMISE
-            inv_aq = st.number_input(
-                "Investimento em Aquisição Comercial (R$)",
-                min_value=0.0,
-                max_value=1_000_000_000.0,
-                value=200_000.0,
-                step=10_000.0,
-            )
-            nov_cli = int(
-                st.number_input(
-                    "Novos Clientes Adquiridos no Período",
-                    min_value=1,
-                    max_value=100_000_000,
-                    value=1000,
-                    step=50,
+        rows = []
+        for code, meta in KPI_CATALOG.items():
+            if sel_cat != "Todas as Categorias" and meta.category != sel_cat:
+                continue
+            if search_kpi.strip():
+                query = search_kpi.strip().lower()
+                matches = (
+                    query in code.lower()
+                    or query in meta.name.lower()
+                    or query in meta.formula.lower()
+                    or query in meta.interpretation.lower()
                 )
+                if not matches:
+                    continue
+            rows.append({
+                "Código": code,
+                "Nome": meta.name,
+                "Categoria": meta.category,
+                "Unidade": meta.unit,
+                "Fórmula Metodológica": meta.formula,
+                "Origem na Planilha": meta.source,
+                "Interpretação Gerencial": meta.interpretation,
+                "Limitações / Cuidados": meta.limitations,
+            })
+        df_dict = pd.DataFrame(rows)
+        render_corporate_table(
+            df_dict,
+            title=f"Catálogo Oficial de Indicadores ({len(df_dict)} indicadores listados)",
+            subtitle="Base de Governança Conceitual CTI Global — 100% alinhada às demonstrações financeiras",
+        )
+
+    with tabs[1]:
+        audit_tm = investigate_ticket_medio(store.bundle.sheets)
+        render_section_header(
+            "1. Diagnóstico Técnico: Ticket Médio na Planilha Original",
+            "Verificação automatizada de todas as 9 abas e 160+ colunas da base Contabilidade e Finanças.xlsx.",
+        )
+        top_cards = [
+            {
+                "label": "Ticket Médio Observado (Base Real)",
+                "value_fmt": "N/D (Indisponível)",
+                "subtitle": "Sem dados de pedidos, volume físico ou nº de clientes",
+                "delta_text": "Verificado nas 9 abas da planilha original",
+                "delta_status": "warning",
+                "badge_text": "Não Calculável na Fonte",
+                "badge_type": "warning",
+                "card_variant": "is-warning",
+                "tooltip": "Jamais inventamos um ticket médio observado sem denominador transacional real.",
+            },
+            {
+                "label": "CAC de Referência (Base Corporativa)",
+                "value_fmt": f"{format_currency_brl(CAC_SIMULATED_PREMISE)}/cliente",
+                "subtitle": "Constante nos 1.200 cenários (Resumo_Cenarios)",
+                "delta_text": "Premissa simulada documentada",
+                "delta_status": "simulated",
+                "badge_text": "Premissa do Modelo",
+                "badge_type": "simulated",
+                "card_variant": "is-simulated",
+            },
+            {
+                "label": "LTV de Referência (Base Corporativa)",
+                "value_fmt": f"{format_currency_brl(LTV_SIMULATED_PREMISE)}/cliente",
+                "subtitle": "Ticket × Compras/Ano × Vida Média × Margem",
+                "delta_text": "Premissa simulada documentada",
+                "delta_status": "simulated",
+                "badge_text": "Premissa do Modelo",
+                "badge_type": "simulated",
+                "card_variant": "is-simulated",
+            },
+            {
+                "label": "LTV / CAC e WACC (Base Corporativa)",
+                "value_fmt": format_multiple_br(LTV_CAC_SIMULATED_PREMISE),
+                "subtitle": f"WACC do modelo: {format_pct_br(WACC_MODEL_PREMISE)} a.a.",
+                "delta_text": "R$ 2.100,00 / R$ 200,00 = 10,50x",
+                "delta_status": "simulated",
+                "badge_text": "Premissa do Modelo",
+                "badge_type": "simulated",
+                "card_variant": "is-simulated",
+            },
+        ]
+        render_kpi_grid(top_cards)
+
+        req_list_html = "".join(f"<li>{item}</li>" for item in audit_tm["required_fields_for_real_calculation"])
+        render_callout(
+            "Por que o Ticket Médio real é exibido como N/D e quais dados seriam necessários?",
+            f"A auditoria programática confirmou que a planilha da CTI contém exclusivamente demonstrações financeiras "
+            f"contábeis agregadas (DRE, Balanço Patrimonial e DFC), sem colunas transacionais comerciais. "
+            f"No <code>Dicionario_KPIs</code>, o termo <em>Ticket médio</em> aparece apenas como componente conceitual da "
+            f"fórmula simulada do <strong>LTV simulado</strong> (<code>Ticket médio × Compras/ano × Vida média × Margem %</code>).<br>"
+            f"<strong>Dados necessários para cálculo empírico futuro:</strong><ul>{req_list_html}</ul>",
+            kind="info",
+        )
+
+    with tabs[2]:
+        render_section_header(
+            "2. Simulador Parametrizado de Ticket Médio e Unit Economics (Claramente Identificado como Simulação)",
+            "Insira premissas comerciais explícitas para estimar Ticket Médio, Receita por Cliente, LTV, CAC, LTV/CAC e Payback.",
+        )
+
+        df_scen = filter_panel(store.panel, scenarios=active_scenario, period_range=period_range)
+        summ = summarize_kpis_for_selection(df_scen)
+        mc_obs = summ["margem_contribuicao"]["mean"]
+        rec_obs = summ["receita"]["mean"]
+
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            ticket_sim = st.number_input(
+                "Premissa de Ticket Médio por Transação (R$)",
+                min_value=1.0,
+                max_value=100_000_000.0,
+                value=350.0,
+                step=25.0,
+                help="Valor médio hipotético por fatura/pedido emitido.",
             )
+            compras_ano = st.number_input(
+                "Frequência Média de Compras / Faturas por Ano",
+                min_value=0.1,
+                max_value=365.0,
+                value=2.0,
+                step=0.5,
+            )
+        with c2:
+            vida_anos = st.number_input(
+                "Vida Média / Retenção do Cliente (Anos)",
+                min_value=0.25,
+                max_value=30.0,
+                value=3.75,
+                step=0.25,
+            )
+            use_obs_margin = st.checkbox(
+                f"Usar Margem de Contribuição observada de {active_scenario} ({format_pct_br(mc_obs)})",
+                value=False,
+            )
+            if use_obs_margin and is_valid_number(mc_obs):
+                margem_ltv = float(np.clip(mc_obs * 100.0, 0.0, 100.0))
+                st.caption(f"Margem aplicada automaticamente: **{format_pct_br(mc_obs)}**")
+            else:
+                margem_ltv = st.slider(
+                    "Margem de Contribuição p/ LTV (%)",
+                    min_value=5.0,
+                    max_value=100.0,
+                    value=80.0,
+                    step=1.0,
+                    help="Com Ticket R$ 350 × 2,0 compras/ano × 3,75 anos × 80% = R$ 2.100,00 (referência da base corporativa).",
+                )
+        with c3:
+            modo_cac_lbl = st.radio(
+                "Modo de Parametrização do CAC Simulado:",
+                options=["Informar CAC unitário direto (R$/cliente)", "Calcular via Investimento / Novos Clientes"],
+            )
+            if modo_cac_lbl.startswith("Informar"):
+                modo_cac = "direto"
+                cac_dir = st.number_input(
+                    "CAC Unitário Simulado (R$/cliente)",
+                    min_value=1.0,
+                    max_value=10_000_000.0,
+                    value=float(CAC_SIMULATED_PREMISE),
+                    step=10.0,
+                )
+                inv_aq, nov_cli = 200_000.0, 1000
+            else:
+                modo_cac = "investimento_clientes"
+                cac_dir = CAC_SIMULATED_PREMISE
+                inv_aq = st.number_input(
+                    "Investimento em Aquisição Comercial (R$)",
+                    min_value=0.0,
+                    max_value=1_000_000_000.0,
+                    value=200_000.0,
+                    step=10_000.0,
+                )
+                nov_cli = int(
+                    st.number_input(
+                        "Novos Clientes Adquiridos no Período",
+                        min_value=1,
+                        max_value=100_000_000,
+                        value=1000,
+                        step=50,
+                    )
+                )
 
-    sim_out = simulate_customer_unit_economics(
-        CustomerSimulationParams(
-            ticket_medio_simulado=ticket_sim,
-            compras_por_ano=compras_ano,
-            vida_media_anos=vida_anos,
-            margem_ltv_pct=margem_ltv / 100.0,
-            modo_cac=modo_cac,
-            cac_direto=cac_dir,
-            investimento_aquisicao=inv_aq,
-            novos_clientes=nov_cli,
+        sim_out = simulate_customer_unit_economics(
+            CustomerSimulationParams(
+                ticket_medio_simulado=ticket_sim,
+                compras_por_ano=compras_ano,
+                vida_media_anos=vida_anos,
+                margem_ltv_pct=margem_ltv / 100.0,
+                modo_cac=modo_cac,
+                cac_direto=cac_dir,
+                investimento_aquisicao=inv_aq,
+                novos_clientes=nov_cli,
+            )
         )
-    )
 
-    # Estimativa implícita de transações e clientes ativos compatíveis com a Receita observada do cenário
-    transacoes_implicitas = (rec_obs / ticket_sim) if (is_valid_number(rec_obs) and ticket_sim > 0) else np.nan
-    clientes_implicitos = (
-        rec_obs / sim_out["receita_anual_por_cliente"]
-        if (is_valid_number(rec_obs) and sim_out["receita_anual_por_cliente"] > 0)
-        else np.nan
-    )
-
-    sim_cards = [
-        {
-            "label": "Ticket Médio (Simulado)",
-            "value_fmt": format_currency_brl(sim_out["ticket_medio_simulado"]),
-            "subtitle": f"Receita anual/cliente: {format_currency_brl(sim_out['receita_anual_por_cliente'])}",
-            "delta_text": "Premissa inserida pelo usuário",
-            "delta_status": "simulated",
-            "badge_text": "Simulação",
-            "badge_type": "simulated",
-            "card_variant": "is-simulated",
-        },
-        {
-            "label": "LTV Recalculado (Simulado)",
-            "value_fmt": f"{format_currency_brl(sim_out['ltv_simulado'])}/cliente",
-            "subtitle": f"Ref. Base: {format_currency_brl(LTV_SIMULATED_PREMISE)}/cliente",
-            "delta_text": f"Dif. vs Base: {format_currency_brl(sim_out['diff_vs_e1']['ltv_diff'])}/cliente",
-            "delta_status": "simulated",
-            "badge_text": "Simulação",
-            "badge_type": "simulated",
-            "card_variant": "is-simulated",
-        },
-        {
-            "label": "CAC Recalculado (Simulado)",
-            "value_fmt": f"{format_currency_brl(sim_out['cac_simulado'])}/cliente",
-            "subtitle": f"Ref. Base: {format_currency_brl(CAC_SIMULATED_PREMISE)}/cliente",
-            "delta_text": f"Dif. vs Base: {format_currency_brl(sim_out['diff_vs_e1']['cac_diff'])}/cliente",
-            "delta_status": "simulated",
-            "badge_text": "Simulação",
-            "badge_type": "simulated",
-            "card_variant": "is-simulated",
-        },
-        {
-            "label": "Relação LTV / CAC (Simulada)",
-            "value_fmt": format_multiple_br(sim_out["ltv_cac_simulado"]),
-            "subtitle": f"Payback estimado do CAC: {format_number_br(sim_out['payback_cac_meses'], 1)} meses",
-            "delta_text": f"Ref. Base: {format_multiple_br(LTV_CAC_SIMULATED_PREMISE)}",
-            "delta_status": "positive" if (sim_out["ltv_cac_simulado"] or 0) >= 3.0 else "warning",
-            "badge_text": "Simulação",
-            "badge_type": "simulated",
-            "card_variant": "is-simulated",
-        },
-        {
-            "label": f"Volume Implícito p/ Receita de {active_scenario}",
-            "value_fmt": f"{format_number_br(transacoes_implicitas, 0)} trans./ano",
-            "subtitle": f"Eq. a ~{format_number_br(clientes_implicitos, 0)} clientes ativos/ano",
-            "delta_text": f"Sobre Receita média de {format_currency_brl(rec_obs, compact=True)}",
-            "delta_status": "simulated",
-            "badge_text": "Simulação Implícita",
-            "badge_type": "simulated",
-            "card_variant": "is-simulated",
-        },
-    ]
-    render_kpi_grid(sim_cards)
-
-    # Curva de sensibilidade do LTV/CAC em função do Ticket Médio Simulado
-    tickets_grid = np.linspace(max(10.0, ticket_sim * 0.4), ticket_sim * 1.8, 25)
-    ltv_cac_curve = [
-        (t * compras_ano * vida_anos * (margem_ltv / 100.0)) / sim_out["cac_simulado"]
-        if sim_out["cac_simulado"] > 0 else np.nan
-        for t in tickets_grid
-    ]
-    fig_curve = go.Figure()
-    fig_curve.add_trace(
-        go.Scatter(
-            x=tickets_grid,
-            y=ltv_cac_curve,
-            mode="lines+markers",
-            name="LTV/CAC Simulado",
-            line=dict(color=PALETTE["simulated"], width=2.8),
+        # Estimativa implícita de transações e clientes ativos compatíveis com a Receita observada do cenário
+        transacoes_implicitas = (rec_obs / ticket_sim) if (is_valid_number(rec_obs) and ticket_sim > 0) else np.nan
+        clientes_implicitos = (
+            rec_obs / sim_out["receita_anual_por_cliente"]
+            if (is_valid_number(rec_obs) and sim_out["receita_anual_por_cliente"] > 0)
+            else np.nan
         )
-    )
-    fig_curve.add_hline(
-        y=LTV_CAC_SIMULATED_PREMISE,
-        line_dash="dot",
-        line_color="#475569",
-        annotation_text="Referência Base (10,50x)",
-    )
-    apply_corporate_layout(
-        fig_curve,
-        "Sensibilidade da Relação LTV / CAC em Função do Ticket Médio Simulado",
-        subtitle="Simulação paramétrica mantendo frequência, retenção, margem e CAC constantes",
-        x_title="Ticket Médio Simulado (R$)",
-        y_title="Relação LTV / CAC (x)",
-        height=340,
-    )
-    fig_curve.update_xaxes(tickprefix="R$ ")
-    fig_curve.update_yaxes(ticksuffix="x")
-    st.plotly_chart(fig_curve, use_container_width=True)
+
+        sim_cards = [
+            {
+                "label": "Ticket Médio (Simulado)",
+                "value_fmt": format_currency_brl(sim_out["ticket_medio_simulado"]),
+                "subtitle": f"Receita anual/cliente: {format_currency_brl(sim_out['receita_anual_por_cliente'])}",
+                "delta_text": "Premissa inserida pelo usuário",
+                "delta_status": "simulated",
+                "badge_text": "Simulação",
+                "badge_type": "simulated",
+                "card_variant": "is-simulated",
+            },
+            {
+                "label": "LTV Recalculado (Simulado)",
+                "value_fmt": f"{format_currency_brl(sim_out['ltv_simulado'])}/cliente",
+                "subtitle": f"Ref. Base: {format_currency_brl(LTV_SIMULATED_PREMISE)}/cliente",
+                "delta_text": f"Dif. vs Base: {format_currency_brl(sim_out['diff_vs_e1']['ltv_diff'])}/cliente",
+                "delta_status": "simulated",
+                "badge_text": "Simulação",
+                "badge_type": "simulated",
+                "card_variant": "is-simulated",
+            },
+            {
+                "label": "CAC Recalculado (Simulado)",
+                "value_fmt": f"{format_currency_brl(sim_out['cac_simulado'])}/cliente",
+                "subtitle": f"Ref. Base: {format_currency_brl(CAC_SIMULATED_PREMISE)}/cliente",
+                "delta_text": f"Dif. vs Base: {format_currency_brl(sim_out['diff_vs_e1']['cac_diff'])}/cliente",
+                "delta_status": "simulated",
+                "badge_text": "Simulação",
+                "badge_type": "simulated",
+                "card_variant": "is-simulated",
+            },
+            {
+                "label": "Relação LTV / CAC (Simulada)",
+                "value_fmt": format_multiple_br(sim_out["ltv_cac_simulado"]),
+                "subtitle": f"Payback estimado do CAC: {format_number_br(sim_out['payback_cac_meses'], 1)} meses",
+                "delta_text": f"Ref. Base: {format_multiple_br(LTV_CAC_SIMULATED_PREMISE)}",
+                "delta_status": "positive" if (sim_out["ltv_cac_simulado"] or 0) >= 3.0 else "warning",
+                "badge_text": "Simulação",
+                "badge_type": "simulated",
+                "card_variant": "is-simulated",
+            },
+            {
+                "label": f"Volume Implícito p/ Receita de {active_scenario}",
+                "value_fmt": f"{format_number_br(transacoes_implicitas, 0)} trans./ano",
+                "subtitle": f"Eq. a ~{format_number_br(clientes_implicitos, 0)} clientes ativos/ano",
+                "delta_text": f"Sobre Receita média de {format_currency_brl(rec_obs, compact=True)}",
+                "delta_status": "simulated",
+                "badge_text": "Simulação Implícita",
+                "badge_type": "simulated",
+                "card_variant": "is-simulated",
+            },
+        ]
+        render_kpi_grid(sim_cards)
+
+        # Curva de sensibilidade do LTV/CAC em função do Ticket Médio Simulado
+        tickets_grid = np.linspace(max(10.0, ticket_sim * 0.4), ticket_sim * 1.8, 25)
+        ltv_cac_curve = [
+            (t * compras_ano * vida_anos * (margem_ltv / 100.0)) / sim_out["cac_simulado"]
+            if sim_out["cac_simulado"] > 0 else np.nan
+            for t in tickets_grid
+        ]
+        fig_curve = go.Figure()
+        fig_curve.add_trace(
+            go.Scatter(
+                x=tickets_grid,
+                y=ltv_cac_curve,
+                mode="lines+markers",
+                name="LTV/CAC Simulado",
+                line=dict(color=PALETTE["simulated"], width=2.8),
+            )
+        )
+        fig_curve.add_hline(
+            y=LTV_CAC_SIMULATED_PREMISE,
+            line_dash="dot",
+            line_color="#475569",
+            annotation_text="Referência Base (10,50x)",
+        )
+        apply_corporate_layout(
+            fig_curve,
+            "Sensibilidade da Relação LTV / CAC em Função do Ticket Médio Simulado",
+            subtitle="Simulação paramétrica mantendo frequência, retenção, margem e CAC constantes",
+            x_title="Ticket Médio Simulado (R$)",
+            y_title="Relação LTV / CAC (x)",
+            height=340,
+        )
+        fig_curve.update_xaxes(tickprefix="R$ ")
+        fig_curve.update_yaxes(ticksuffix="x")
+        st.plotly_chart(fig_curve, use_container_width=True)
 
     render_data_footer(store)
+
+
+render_page_ticket_simulados = render_page_metodologia_indicadores
 

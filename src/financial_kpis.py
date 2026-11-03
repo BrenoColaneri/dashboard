@@ -76,6 +76,126 @@ def compute_variation(
     }
 
 
+
+def calculate_dfc_metrics(
+    fco: float,
+    receita: float,
+    ebitda: float,
+    lucro_liquido: float,
+    investimentos: float,
+    depreciacao_amortizacao: float,
+    juros_pagos: float,
+    divida_bruta: float,
+    dividendos_pagos: float,
+    recebimentos: float | None = None,
+) -> dict[str, float]:
+    """Calcula os 11 KPIs da DFC a partir de valores escalares para testes unitários e auditoria."""
+    rec_val = abs(receita) if is_valid_number(receita) else np.nan
+    rec_pagos = recebimentos if is_valid_number(recebimentos) else (fco if is_valid_number(fco) else np.nan)
+
+    taxa_conv = (safe_divide(rec_pagos, rec_val) * 100.0) if is_valid_number(recebimentos) else np.nan
+    fco_ebitda = safe_divide(fco, ebitda) * 100.0
+    fco_lucro = safe_divide(fco, lucro_liquido)
+    fcl = fco - abs(investimentos) if is_valid_number(fco) and is_valid_number(investimentos) else np.nan
+    capex_rec = safe_divide(abs(investimentos), rec_val) * 100.0
+    capex_da = safe_divide(abs(investimentos), abs(depreciacao_amortizacao))
+    cob_juros = safe_divide(fco, abs(juros_pagos))
+    fco_div = safe_divide(fco, abs(divida_bruta)) * 100.0
+    prazo_quitacao = safe_divide(abs(divida_bruta), fco)
+    payout = safe_divide(abs(dividendos_pagos), lucro_liquido) * 100.0
+    cob_div = safe_divide(fcl, abs(dividendos_pagos))
+
+    return {
+        "fco": fco,
+        "taxa_conversao_receita": taxa_conv,
+        "fco_ebitda": fco_ebitda,
+        "fco_lucro": fco_lucro,
+        "fcl": fcl,
+        "capex_receita": capex_rec,
+        "capex_da": capex_da,
+        "cobertura_juros_caixa": cob_juros,
+        "fco_divida_bruta": fco_div,
+        "prazo_quitacao_divida": prazo_quitacao,
+        "payout_caixa": payout,
+        "cobertura_dividendos": cob_div,
+    }
+
+
+def calculate_working_capital_metrics(
+    ativo_circulante: float,
+    passivo_circulante: float,
+    contas_receber_clientes: float,
+    receita_operacional: float,
+    fornecedores: float,
+    custos_operacionais: float,
+    ajuste_renegociacao_lp: float = 0.0,
+) -> dict[str, float]:
+    """Calcula os indicadores de capital de giro e prazos médios a partir de valores escalares."""
+    pc_ajustado = abs(passivo_circulante) - abs(ajuste_renegociacao_lp)
+    ccl = ativo_circulante - pc_ajustado
+    pmr = safe_divide(contas_receber_clientes, abs(receita_operacional)) * 360.0
+    pmp = safe_divide(abs(fornecedores), abs(custos_operacionais)) * 360.0
+    ciclo = pmr - pmp if is_valid_number(pmr) and is_valid_number(pmp) else np.nan
+    custo_diario = safe_divide(abs(custos_operacionais), 360.0)
+    ncg = ciclo * custo_diario if is_valid_number(ciclo) and is_valid_number(custo_diario) else np.nan
+    folga = ccl - ncg if is_valid_number(ccl) and is_valid_number(ncg) else np.nan
+
+    return {
+        "passivo_circulante_ajustado": pc_ajustado,
+        "ccl": ccl,
+        "pmr": pmr,
+        "pmp": pmp,
+        "ciclo_financeiro": ciclo,
+        "necessidade_capital_giro": ncg,
+        "folga_ccl": folga,
+    }
+
+
+def calculate_dva_metrics(
+    receitas: float,
+    insumos_terceiros: float,
+    retencoes_da: float,
+    transferencias: float,
+    pessoal: float,
+    impostos: float,
+    capitais_terceiros: float,
+    capitais_proprios: float,
+    lucros_retidos: float | None = None,
+    num_empregados: float | None = None,
+) -> dict[str, float]:
+    """Calcula a demonstração do valor adicionado e validações a partir de valores escalares."""
+    va_bruto = receitas - insumos_terceiros
+    va_liquido = va_bruto - retencoes_da
+    va_total = va_liquido + transferencias
+    total_distribuido = pessoal + impostos + capitais_terceiros + capitais_proprios
+    conciliacao_diff = abs(va_total - total_distribuido)
+
+    grau_riqueza = safe_divide(va_total, receitas) * 100.0
+    part_governo = safe_divide(impostos, va_total) * 100.0
+    part_pessoal = safe_divide(pessoal, va_total) * 100.0
+    part_terceiros = safe_divide(capitais_terceiros, va_total) * 100.0
+    part_proprios = safe_divide(capitais_proprios, va_total) * 100.0
+    part_transferencias = safe_divide(transferencias, va_total) * 100.0
+    retencao_riqueza = safe_divide(lucros_retidos, va_total) * 100.0 if lucros_retidos is not None else np.nan
+    va_por_empregado = safe_divide(va_total, num_empregados) if num_empregados is not None else np.nan
+
+    return {
+        "dva_va_bruto": va_bruto,
+        "dva_va_liquido": va_liquido,
+        "dva_va_total": va_total,
+        "total_distribuido": total_distribuido,
+        "conciliacao_dva_diff": conciliacao_diff,
+        "dva_grau_riqueza": grau_riqueza,
+        "dva_part_governo": part_governo,
+        "dva_part_pessoal": part_pessoal,
+        "dva_part_terceiros": part_terceiros,
+        "dva_part_proprios": part_proprios,
+        "dva_part_transferencias": part_transferencias,
+        "dva_retencao_riqueza": retencao_riqueza,
+        "dva_va_por_empregado": va_por_empregado,
+    }
+
+
 def compute_recalculated_kpis(panel: pd.DataFrame, wacc: float = WACC_MODEL_PREMISE) -> pd.DataFrame:
     """Recalcula todos os KPIs a partir de DRE, Balanço e DFC e cria colunas canônicas `kpi_*` e `calc_*`."""
     df = panel.copy()
@@ -169,26 +289,184 @@ def compute_recalculated_kpis(panel: pd.DataFrame, wacc: float = WACC_MODEL_PREM
     df["calc_geracao_caixa"] = df.get("FLU - Geração de Caixa", pd.Series(np.nan, index=df.index))
     df["calc_saldo_final_caixa"] = df.get("FLU - Saldo Final", pd.Series(np.nan, index=df.index))
 
+    # -------------------------------------------------------------------------
+    # MÓDULO 1 — ÍNDICES DA DFC (VETORIZADO)
+    # -------------------------------------------------------------------------
+    flu_rec = df.get("FLU - Receita", pd.Series(np.nan, index=df.index)).abs()
+    flu_trib = df.get("FLU - Tributos", pd.Series(np.nan, index=df.index)).abs()
+    flu_cust = df.get("FLU - Custos", pd.Series(np.nan, index=df.index)).abs()
+    flu_ircs = df.get("FLU - Imposto de Renda e Contribuição Social", pd.Series(np.nan, index=df.index)).abs()
+    flu_inv = df.get("FLU - Investimentos", pd.Series(np.nan, index=df.index)).abs()
+    flu_desp_fin = df.get("FLU - Despesas Financeiras", pd.Series(np.nan, index=df.index)).abs()
+    flu_entradas = df.get("FLU - Entradas", pd.Series(np.nan, index=df.index)).abs()
+    flu_dist_acionista = df.get("FLU - Distribuição para Acionista", pd.Series(np.nan, index=df.index)).abs()
+    flu_saldo_ini = df.get("FLU - Saldo Inicial", pd.Series(np.nan, index=df.index))
+    flu_saldo_fim = df.get("FLU - Saldo Final", pd.Series(np.nan, index=df.index))
+    flu_geracao_caixa = df.get("FLU - Geração de Caixa", pd.Series(np.nan, index=df.index))
+
+    # FCO: Recebimentos − Tributos − Custos − IR/CSLL
+    fco = flu_rec - flu_trib - flu_cust - flu_ircs
+    df["calc_fco"] = fco
+    df["calc_fco_fluxo"] = fco
+    df["calc_taxa_conversao_receita"] = safe_divide(flu_rec, rec_abs) * 100.0
+
+    # FCO / EBITDA
+    ebitda_base = df["calc_ebitda_calculado"]
+    df["calc_fco_ebitda"] = safe_divide(fco, ebitda_base) * 100.0
+    df["calc_fco_lucro"] = safe_divide(fco, ll)
+
+    # FCL: FCO − Investimentos
+    fcl = fco - flu_inv
+    df["calc_fcl"] = fcl
+    df["calc_geracao_apos_investimentos"] = fcl
+
+    # Capex / Receita e Capex / D&A
+    df["calc_capex_receita"] = safe_divide(flu_inv, rec_abs) * 100.0
+    df["calc_capex_da"] = safe_divide(flu_inv, da_abs)
+
+    # Cobertura de Juros em Caixa
+    df["calc_cobertura_juros_caixa"] = safe_divide(fco, flu_desp_fin)
+
+    # FCO / Dívida Bruta (mascarada com NaN no Ano 12)
+    emp_cp = df.get("BAL - Empréstimos", pd.Series(np.nan, index=df.index)).abs()
+    emp_lp = df.get("BAL - Emprést", pd.Series(np.nan, index=df.index)).abs()
+    divida_bruta = (emp_cp + emp_lp).where(~bal_incompleto, np.nan)
+    df["calc_fco_divida_bruta"] = (safe_divide(fco, divida_bruta) * 100.0).where(~bal_incompleto, np.nan)
+    df["calc_prazo_quitacao_divida"] = (safe_divide(divida_bruta, fco)).where(~bal_incompleto, np.nan)
+
+    # Payout e Cobertura de Dividendos
+    df["calc_payout_caixa"] = safe_divide(flu_dist_acionista, ll) * 100.0
+    df["calc_cobertura_dividendos"] = safe_divide(fcl, flu_dist_acionista)
+
+    # -------------------------------------------------------------------------
+    # MÓDULO 2 — ÍNDICES DE CAPITAL DE GIRO E PRAZOS MÉDIOS (VETORIZADO)
+    # -------------------------------------------------------------------------
+    ccl = (ac - pc_abs).where(~bal_incompleto, np.nan)
+    cr_cli = df.get("BAL - Contas a Receber - Clientes", pd.Series(np.nan, index=df.index))
+    fornec = df.get("BAL - Fornecedores", pd.Series(np.nan, index=df.index)).abs()
+
+    pmr = (safe_divide(cr_cli, rec_abs) * 360.0).where(~bal_incompleto, np.nan)
+    pmp = (safe_divide(fornec, cust_abs) * 360.0).where(~bal_incompleto, np.nan)
+    ciclo_fin = (pmr - pmp).where(~bal_incompleto, np.nan)
+    custo_diario = safe_divide(cust_abs, 360.0)
+    ncg = (ciclo_fin * custo_diario).where(~bal_incompleto, np.nan)
+    folga_ccl = (ccl - ncg).where(~bal_incompleto, np.nan)
+
+    df["calc_ccl"] = ccl
+    df["calc_pmr"] = pmr
+    df["calc_pmp"] = pmp
+    df["calc_ciclo_financeiro"] = ciclo_fin
+    df["calc_necessidade_capital_giro"] = ncg
+    df["calc_folga_ccl"] = folga_ccl
+
+    # -------------------------------------------------------------------------
+    # MÓDULO 3 — FLUXO DE CAIXA (VETORIZADO)
+    # -------------------------------------------------------------------------
+    df["calc_saldo_inicial_caixa"] = flu_saldo_ini
+    df["calc_entradas_operacionais"] = flu_rec
+    saidas_op = flu_trib + flu_cust + flu_ircs
+    df["calc_saidas_operacionais"] = saidas_op
+    df["calc_fluxo_investimentos"] = df.get("FLU - Investimentos", pd.Series(np.nan, index=df.index))
+    df["calc_fluxo_financiamento"] = df.get("FLU - Despesas Financeiras", pd.Series(0.0, index=df.index)) + df.get("FLU - Distribuição para Acionista", pd.Series(0.0, index=df.index))
+    juros_liq = flu_desp_fin - flu_entradas
+    df["calc_juros_liquidos"] = juros_liq
+    df["calc_geracao_apos_juros_div"] = fcl - juros_liq - flu_dist_acionista
+    df["calc_saldo_final_caixa"] = flu_saldo_fim
+    df["calc_conciliacao_caixa_diff"] = (flu_saldo_ini + flu_geracao_caixa - flu_saldo_fim).abs()
+
+    # -------------------------------------------------------------------------
+    # MÓDULO 4 — DEMONSTRAÇÃO DO VALOR ADICIONADO - DVA (VETORIZADO)
+    # -------------------------------------------------------------------------
+    rec_oper = df.get("DRE - Outros Resultados Operacionais", pd.Series(0.0, index=df.index))
+    outras_rec = rec_oper.apply(lambda v: float(v) if v > 0 else 0.0)
+    outros_ins = rec_oper.apply(lambda v: abs(float(v)) if v < 0 else 0.0)
+
+    # Item 1: Receitas
+    dva_item1 = rec_abs + outras_rec
+    df["calc_dva_receitas_totais"] = dva_item1
+    df["calc_dva_vendas_brutas"] = rec_abs
+    df["calc_dva_outras_receitas"] = outras_rec
+
+    # Item 2: Insumos de terceiros
+    dva_item2 = cust_abs + outros_ins
+    df["calc_dva_insumos_totais"] = dva_item2
+    df["calc_dva_custos"] = cust_abs
+    df["calc_dva_outros_insumos"] = outros_ins
+
+    # Item 3: VA Bruto
+    va_bruto = dva_item1 - dva_item2
+    df["calc_dva_va_bruto"] = va_bruto
+
+    # Item 4: Retenções (Depreciação, Amortização e Exaustão)
+    df["calc_dva_retencoes"] = da_abs
+
+    # Item 5: VA Líquido Produzido
+    va_liq = va_bruto - da_abs
+    df["calc_dva_va_liquido"] = va_liq
+
+    # Item 6: Transferências
+    rec_fin = df.get("DRE - Receitas Financeiras", pd.Series(0.0, index=df.index)).abs()
+    rl_pos_equiv = df.get("DRE - Resultado Líquido após Equivalência", ll)
+    equiv_patr = (rl_pos_equiv - ll).abs()
+    transf_total = rec_fin + equiv_patr
+    df["calc_dva_receitas_financeiras"] = rec_fin
+    df["calc_dva_equiv_patrimonial"] = equiv_patr
+    df["calc_dva_transferencias_totais"] = transf_total
+
+    # Item 7: VA Total a Distribuir
+    va_total = va_liq + transf_total
+    df["calc_dva_va_total"] = va_total
+
+    # Item 8: Distribuição da Riqueza
+    dist_pessoal = pd.Series(0.0, index=df.index)
+    dist_gov = trib.abs() + ir_csll.abs()
+    dist_terc = df.get("DRE - Despesas Financeiras", pd.Series(0.0, index=df.index)).abs()
+    dist_div = flu_dist_acionista
+    dist_retidos = ll - dist_div
+    dist_proprios = ll
+
+    df["calc_dva_dist_pessoal"] = dist_pessoal
+    df["calc_dva_dist_governo"] = dist_gov
+    df["calc_dva_dist_terceiros"] = dist_terc
+    df["calc_dva_dist_dividendos"] = dist_div
+    df["calc_dva_dist_lucros_retidos"] = dist_retidos
+    df["calc_dva_dist_proprios"] = dist_proprios
+    total_dist = dist_pessoal + dist_gov + dist_terc + dist_proprios
+    df["calc_dva_total_distribuido"] = total_dist
+    df["calc_dva_conciliacao_diff"] = (va_total - total_dist).abs()
+
+    # Indicadores da DVA
+    df["calc_dva_grau_riqueza"] = safe_divide(va_total, dva_item1) * 100.0
+    df["calc_dva_va_por_empregado"] = pd.Series(np.nan, index=df.index)
+    df["calc_dva_part_governo"] = safe_divide(dist_gov, va_total) * 100.0
+    df["calc_dva_part_pessoal"] = safe_divide(dist_pessoal, va_total) * 100.0
+    df["calc_dva_part_terceiros"] = safe_divide(dist_terc, va_total) * 100.0
+    df["calc_dva_part_proprios"] = safe_divide(dist_proprios, va_total) * 100.0
+    df["calc_dva_part_transferencias"] = safe_divide(transf_total, va_total) * 100.0
+    df["calc_dva_retencao_riqueza"] = safe_divide(dist_retidos, va_total) * 100.0
+
+
     # --- Colunas canônicas unificadas `kpi_<key>` para consumo consistente em todo o sistema ---
+    kpi_cols: dict[str, Any] = {}
     for key, meta in KPI_CATALOG.items():
         if meta.is_simulated_premise:
             if key == "cac_simulado":
-                df[f"kpi_{key}"] = CAC_SIMULATED_PREMISE
+                kpi_cols[f"kpi_{key}"] = CAC_SIMULATED_PREMISE
             elif key == "ltv_simulado":
-                df[f"kpi_{key}"] = LTV_SIMULATED_PREMISE
+                kpi_cols[f"kpi_{key}"] = LTV_SIMULATED_PREMISE
             elif key == "ltv_cac":
-                df[f"kpi_{key}"] = LTV_CAC_SIMULATED_PREMISE
+                kpi_cols[f"kpi_{key}"] = LTV_CAC_SIMULATED_PREMISE
             continue
 
         calc_col = f"calc_{key}"
         if meta.kpis_sheet_col and meta.kpis_sheet_col in df.columns:
-            # Usa o valor da planilha quando presente e preenche eventuais ausências válidas com o recalculado
-            df[f"kpi_{key}"] = df[meta.kpis_sheet_col]
+            kpi_cols[f"kpi_{key}"] = df[meta.kpis_sheet_col]
         elif calc_col in df.columns:
-            df[f"kpi_{key}"] = df[calc_col]
+            kpi_cols[f"kpi_{key}"] = df[calc_col]
         else:
-            df[f"kpi_{key}"] = np.nan
+            kpi_cols[f"kpi_{key}"] = np.nan
 
+    df = pd.concat([df, pd.DataFrame(kpi_cols, index=df.index)], axis=1)
     return df
 
 
@@ -209,6 +487,16 @@ def summarize_kpis_for_selection(df_scenario: pd.DataFrame) -> dict[str, dict[st
         "eva",
         "geracao_caixa",
         "resultado_liquido",
+        "fco",
+        "fco_fluxo",
+        "fcl",
+        "entradas_operacionais",
+        "saidas_operacionais",
+        "geracao_apos_investimentos",
+        "geracao_apos_juros_div",
+        "dva_va_bruto",
+        "dva_va_liquido",
+        "dva_va_total",
     }
     ordered = df_scenario.sort_values("Ano") if "Ano" in df_scenario.columns else df_scenario
     results: dict[str, dict[str, Any]] = {}

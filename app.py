@@ -27,6 +27,12 @@ from src.views.datascience_quality_exports import (
     render_page_modelos_analiticos,
     render_page_relatorios_gerenciais,
 )
+from src.views.cashflow_workingcapital_dva import (
+    render_page_capital_giro,
+    render_page_dva,
+    render_page_fluxo_caixa,
+    render_page_indices_dfc,
+)
 from src.views.executive_and_statements import (
     render_page_balanco,
     render_page_dfc,
@@ -40,6 +46,7 @@ from src.views.kpis_scenarios_evolution import (
 )
 from src.views.planning_simulation_goals import (
     render_page_metas,
+    render_page_metodologia_indicadores,
     render_page_sensibilidade,
     render_page_ticket_simulados,
 )
@@ -88,16 +95,19 @@ PAGES: list[str] = [
     "2. DRE — Demonstração do Resultado",
     "3. Balanço Patrimonial",
     "4. Fluxo de Caixa",
-    "5. Indicadores Financeiros",
-    "6. Cenários e Rankings",
-    "7. Evolução Financeira",
-    "8. Análise de Sensibilidade",
-    "9. Metas Financeiras",
-    "10. Ticket Médio e Unit Economics",
-    "11. Análise Estatística",
-    "12. Modelos Analíticos",
-    "13. Qualidade e Governança de Dados",
-    "14. Relatórios Gerenciais",
+    "5. Demonstração do Valor Adicionado (DVA)",
+    "6. Indicadores Financeiros",
+    "7. Índices da DFC",
+    "8. Capital de Giro e Prazos Médios",
+    "9. Cenários e Rankings",
+    "10. Evolução Financeira",
+    "11. Análise de Sensibilidade",
+    "12. Metas Financeiras",
+    "13. Análise Estatística",
+    "14. Modelos Analíticos",
+    "15. Relatórios Gerenciais",
+    "16. Qualidade e Governança de Dados",
+    "17. Metodologia e Indicadores",
 ]
 
 
@@ -283,7 +293,7 @@ def main() -> None:
         use_container_width=True,
     )
 
-    # Roteamento oficial das 14 páginas corporativas
+    # Roteamento oficial das 17 páginas corporativas
     if selected_page.startswith("1."):
         render_page_visao_executiva(store, val_summary, active_scenario, compare_scenarios, period_range)
     elif selected_page.startswith("2."):
@@ -291,27 +301,33 @@ def main() -> None:
     elif selected_page.startswith("3."):
         render_page_balanco(store, active_scenario, compare_scenarios, period_range)
     elif selected_page.startswith("4."):
-        render_page_dfc(store, active_scenario, compare_scenarios, period_range)
+        render_page_fluxo_caixa(store, active_scenario, compare_scenarios, period_range)
     elif selected_page.startswith("5."):
-        render_page_indicadores(store, active_scenario, compare_scenarios, period_range, selected_categories)
+        render_page_dva(store, active_scenario, compare_scenarios, period_range)
     elif selected_page.startswith("6."):
-        render_page_cenarios_rankings(store, active_scenario, compare_scenarios)
+        render_page_indicadores(store, active_scenario, compare_scenarios, period_range, selected_categories)
     elif selected_page.startswith("7."):
-        render_page_evolucao(store, active_scenario, compare_scenarios, period_range)
+        render_page_indices_dfc(store, active_scenario, compare_scenarios, period_range)
     elif selected_page.startswith("8."):
-        render_page_sensibilidade(store, active_scenario, period_range)
+        render_page_capital_giro(store, active_scenario, compare_scenarios, period_range)
     elif selected_page.startswith("9."):
-        render_page_metas(store, active_scenario, period_range)
+        render_page_cenarios_rankings(store, active_scenario, compare_scenarios)
     elif selected_page.startswith("10."):
-        render_page_ticket_simulados(store, active_scenario, period_range)
+        render_page_evolucao(store, active_scenario, compare_scenarios, period_range)
     elif selected_page.startswith("11."):
-        render_page_analise_estatistica(store, active_scenario, period_range)
+        render_page_sensibilidade(store, active_scenario, period_range)
     elif selected_page.startswith("12."):
-        render_page_modelos_analiticos(store, active_scenario, period_range)
+        render_page_metas(store, active_scenario, period_range)
     elif selected_page.startswith("13."):
-        render_page_governanca_qualidade(store, val_summary, active_scenario, period_range)
+        render_page_analise_estatistica(store, active_scenario, period_range)
     elif selected_page.startswith("14."):
+        render_page_modelos_analiticos(store, active_scenario, period_range)
+    elif selected_page.startswith("15."):
         render_page_relatorios_gerenciais(store, val_summary, active_scenario, compare_scenarios, period_range)
+    elif selected_page.startswith("16."):
+        render_page_governanca_qualidade(store, val_summary, active_scenario, period_range)
+    elif selected_page.startswith("17."):
+        render_page_metodologia_indicadores(store, active_scenario, period_range)
 
 
 if __name__ == "__main__":

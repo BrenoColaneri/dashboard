@@ -352,6 +352,9 @@ def chart_dfc_profit_vs_cash(df_scen: pd.DataFrame) -> go.Figure:
     return fig
 
 
+chart_cash_flow_profit_vs_cash = chart_dfc_profit_vs_cash
+
+
 def chart_scenario_distribution(
     resumo_df: pd.DataFrame,
     col: str,
@@ -658,3 +661,936 @@ def chart_regression_diagnostics(predictions_df: pd.DataFrame, target_label: str
     fig2.update_layout(hovermode="closest")
     return fig1, fig2
 
+
+
+# =============================================================================
+# MÓDULO 1 — GRÁFICOS DE ÍNDICES DA DFC
+# =============================================================================
+
+def chart_dfc_fco_ebitda(df_scen: pd.DataFrame) -> go.Figure:
+    """Gráfico comparativo da evolução do FCO e EBITDA por período com taxa de conversão."""
+    df = df_scen.sort_values("Ano").copy()
+    x_labels = df["Período"] if "Período" in df.columns else df["Ano"].map(lambda a: f"Ano {a}")
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=df["calc_ebitda_calculado"],
+            name="EBITDA",
+            marker_color="#94A3B8",
+            hovertemplate="%{x}<br>EBITDA: R$ %{y:,.2f}<extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=df["calc_fco"],
+            name="FCO (Caixa Operacional)",
+            marker_color=PALETTE["primary"],
+            hovertemplate="%{x}<br>FCO: R$ %{y:,.2f}<extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=x_labels,
+            y=df["calc_fco_ebitda"],
+            name="FCO / EBITDA (%)",
+            mode="lines+markers",
+            yaxis="y2",
+            line=dict(color="#B45309", width=2.5),
+            marker=dict(size=7, symbol="diamond"),
+            hovertemplate="%{x}<br>FCO/EBITDA: %{y:.1f}%<extra></extra>",
+        )
+    )
+
+    fig.update_layout(
+        yaxis2=dict(
+            title="FCO / EBITDA (%)",
+            overlaying="y",
+            side="right",
+            ticksuffix="%",
+            showgrid=False,
+            tickfont=dict(size=11, color="#B45309"),
+            automargin=True,
+        ),
+        barmode="group",
+    )
+    return apply_corporate_layout(
+        fig,
+        "Evolução do FCO vs. EBITDA",
+        subtitle="Conversão do resultado operacional potencial em disponibilidade financeira",
+        y_title="Valores em R$",
+        height=380,
+    )
+
+
+def chart_dfc_conversion(df_scen: pd.DataFrame) -> go.Figure:
+    """Comparação entre Receita Faturada e Recebimentos de Clientes com % de conversão."""
+    df = df_scen.sort_values("Ano").copy()
+    x_labels = df["Período"] if "Período" in df.columns else df["Ano"].map(lambda a: f"Ano {a}")
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=df["calc_receita"],
+            name="Receita Operacional (DRE)",
+            marker_color="#CBD5E1",
+            hovertemplate="%{x}<br>Receita: R$ %{y:,.2f}<extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=df["calc_entradas_operacionais"],
+            name="Recebimentos Efetivos (DFC)",
+            marker_color=PALETTE["primary"],
+            hovertemplate="%{x}<br>Recebimentos: R$ %{y:,.2f}<extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=x_labels,
+            y=df["calc_taxa_conversao_receita"],
+            name="Taxa de Conversão (%)",
+            mode="lines+markers",
+            yaxis="y2",
+            line=dict(color="#15803D", width=2.5, dash="dash"),
+            marker=dict(size=7),
+            hovertemplate="%{x}<br>Conversão: %{y:.1f}%<extra></extra>",
+        )
+    )
+
+    fig.update_layout(
+        yaxis2=dict(
+            title="Conversão (%)",
+            overlaying="y",
+            side="right",
+            ticksuffix="%",
+            showgrid=False,
+            tickfont=dict(size=11, color="#15803D"),
+            automargin=True,
+        ),
+        barmode="group",
+    )
+    return apply_corporate_layout(
+        fig,
+        "Conversão da Receita em Caixa",
+        subtitle="Comparativo entre faturamento por competência e recebimentos liquidados",
+        y_title="Valores em R$",
+        height=380,
+    )
+
+
+def chart_dfc_waterfall_fco(row: pd.Series, period_desc: str) -> go.Figure:
+    """Waterfall demonstrando a ponte do EBITDA até o FCO."""
+    ebitda = float(row.get("calc_ebitda_calculado", 0.0))
+    ir_csll = -abs(float(row.get("FLU - Imposto de Renda e Contribuição Social", 0.0)))
+    fco = float(row.get("calc_fco", 0.0))
+    # Capital de Giro / Outros ajustes operacionais na ponte do EBITDA ao FCO
+    cg_outros = fco - (ebitda + ir_csll)
+
+    labels = ["EBITDA", "IR/CSLL Pagos", "Capital Giro / Outros", "FCO"]
+    values = [ebitda, ir_csll, cg_outros, fco]
+    measures = ["relative", "relative", "relative", "total"]
+
+    fig = go.Figure(
+        go.Waterfall(
+            name="Ponte EBITDA -> FCO",
+            orientation="v",
+            measure=measures,
+            x=labels,
+            textposition="outside",
+            text=[f"R$ {abs(v)/1e6:,.1f} mi" if abs(v) >= 1e6 else f"R$ {v:,.0f}" for v in values],
+            y=values,
+            connector=dict(line=dict(color="#CBD5E1")),
+            increasing=dict(marker=dict(color=PALETTE["positive"])),
+            decreasing=dict(marker=dict(color=PALETTE["negative"])),
+            totals=dict(marker=dict(color=PALETTE["primary"])),
+        )
+    )
+    return apply_corporate_layout(
+        fig,
+        f"Ponte de Geração de Caixa Operacional — {period_desc}",
+        subtitle="Conciliação do resultado operacional bruto (EBITDA) até o FCO",
+        y_title="R$",
+        height=370,
+    )
+
+
+def chart_dfc_waterfall_free_cash(row: pd.Series, period_desc: str) -> go.Figure:
+    """Waterfall do FCO até a geração líquida de caixa após juros e dividendos."""
+    fco = float(row.get("calc_fco", 0.0))
+    inv = -abs(float(row.get("FLU - Investimentos", 0.0)))
+    fcl = fco + inv
+    juros_liq = -abs(float(row.get("calc_juros_liquidos", 0.0)))
+    div = -abs(float(row.get("FLU - Distribuição para Acionista", 0.0)))
+    sobra = fcl + juros_liq + div
+
+    labels = ["FCO", "Capex / Invest.", "FCL (Caixa Livre)", "Juros Líquidos", "Dividendos", "Geração Líquida"]
+    values = [fco, inv, fcl, juros_liq, div, sobra]
+    measures = ["relative", "relative", "total", "relative", "relative", "total"]
+
+    fig = go.Figure(
+        go.Waterfall(
+            name="Ponte do FCO à Sobra de Caixa",
+            orientation="v",
+            measure=measures,
+            x=labels,
+            textposition="outside",
+            text=[f"R$ {abs(v)/1e6:,.1f} mi" if abs(v) >= 1e6 else f"R$ {v:,.0f}" for v in values],
+            y=values,
+            connector=dict(line=dict(color="#CBD5E1")),
+            increasing=dict(marker=dict(color=PALETTE["positive"])),
+            decreasing=dict(marker=dict(color=PALETTE["negative"])),
+            totals=dict(marker=dict(color=PALETTE["primary_dark"])),
+        )
+    )
+    return apply_corporate_layout(
+        fig,
+        f"Ponte de Destinação do Caixa — {period_desc}",
+        subtitle="FCO -> Capex -> FCL -> Juros Líquidos -> Dividendos",
+        y_title="R$",
+        height=370,
+    )
+
+
+def chart_dfc_investments_efficiency(df_scen: pd.DataFrame) -> go.Figure:
+    """Gráfico de Capex / Receita e Capex / D&A ao longo dos períodos."""
+    df = df_scen.sort_values("Ano").copy()
+    x_labels = df["Período"] if "Período" in df.columns else df["Ano"].map(lambda a: f"Ano {a}")
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=df["calc_capex_receita"],
+            name="Capex / Receita (%)",
+            marker_color="#0F766E",
+            hovertemplate="%{x}<br>Capex/Receita: %{y:.2f}%<extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=x_labels,
+            y=df["calc_capex_da"],
+            name="Capex / D&A (x)",
+            mode="lines+markers",
+            yaxis="y2",
+            line=dict(color="#B45309", width=2.5),
+            marker=dict(size=7, symbol="circle"),
+            hovertemplate="%{x}<br>Capex/D&A: %{y:.2f}x<extra></extra>",
+        )
+    )
+    fig.add_hline(y=1.0, line_dash="dash", line_color="#64748B", line_width=1.5, yref="y2")
+
+    fig.update_layout(
+        yaxis=dict(ticksuffix="%", automargin=True),
+        yaxis2=dict(
+            title="Capex / D&A (múltiplo)",
+            overlaying="y",
+            side="right",
+            ticksuffix="x",
+            showgrid=False,
+            tickfont=dict(size=11, color="#B45309"),
+            automargin=True,
+        ),
+    )
+    return apply_corporate_layout(
+        fig,
+        "Eficiência e Intensidade dos Investimentos",
+        subtitle="Capex relativo à receita operacional e reposição do desgaste de ativos (linha tracejada em 1,0x)",
+        y_title="Capex / Receita (%)",
+        height=370,
+    )
+
+
+def chart_dfc_payment_capacity(df_scen: pd.DataFrame) -> go.Figure:
+    """Gráfico de Cobertura de Juros em Caixa e relação FCO / Dívida Bruta."""
+    df = df_scen.sort_values("Ano").copy()
+    x_labels = df["Período"] if "Período" in df.columns else df["Ano"].map(lambda a: f"Ano {a}")
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=df["calc_cobertura_juros_caixa"],
+            name="Cobertura de Juros em Caixa (x)",
+            marker_color=PALETTE["primary"],
+            hovertemplate="%{x}<br>Cobertura Juros: %{y:.2f}x<extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=x_labels,
+            y=df["calc_fco_divida_bruta"],
+            name="FCO / Dívida Bruta (%)",
+            mode="lines+markers",
+            yaxis="y2",
+            line=dict(color="#4338CA", width=2.5),
+            marker=dict(size=7),
+            hovertemplate="%{x}<br>FCO/Dívida: %{y:.1f}%<extra></extra>",
+        )
+    )
+    fig.add_hline(y=1.0, line_dash="dash", line_color="#EF4444", line_width=1.5)
+
+    fig.update_layout(
+        yaxis=dict(ticksuffix="x", automargin=True),
+        yaxis2=dict(
+            title="FCO / Dívida Bruta (%)",
+            overlaying="y",
+            side="right",
+            ticksuffix="%",
+            showgrid=False,
+            tickfont=dict(size=11, color="#4338CA"),
+            automargin=True,
+        ),
+    )
+    return apply_corporate_layout(
+        fig,
+        "Capacidade de Pagamento de Credores em Caixa",
+        subtitle="Cobertura de encargos de juros e amortização potencial da dívida bruta pelo FCO",
+        y_title="Cobertura de Juros (múltiplos)",
+        height=370,
+    )
+
+
+def chart_dfc_dividend_sustainability(df_scen: pd.DataFrame) -> go.Figure:
+    """Comparação entre Fluxo de Caixa Livre (FCL), Dividendos Pagos e Cobertura."""
+    df = df_scen.sort_values("Ano").copy()
+    x_labels = df["Período"] if "Período" in df.columns else df["Ano"].map(lambda a: f"Ano {a}")
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=df["calc_fcl"],
+            name="Fluxo de Caixa Livre (FCL)",
+            marker_color=PALETTE["primary_light"],
+            hovertemplate="%{x}<br>FCL: R$ %{y:,.2f}<extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=df["calc_dva_dist_dividendos"],
+            name="Dividendos Pagos",
+            marker_color="#94A3B8",
+            hovertemplate="%{x}<br>Dividendos: R$ %{y:,.2f}<extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=x_labels,
+            y=df["calc_cobertura_dividendos"],
+            name="Cobertura de Dividendos (x)",
+            mode="lines+markers",
+            yaxis="y2",
+            line=dict(color="#B45309", width=2.5),
+            marker=dict(size=7, symbol="diamond"),
+            hovertemplate="%{x}<br>Cobertura Div.: %{y:.2f}x<extra></extra>",
+        )
+    )
+    fig.add_hline(y=1.0, line_dash="dash", line_color="#64748B", line_width=1.5, yref="y2")
+
+    fig.update_layout(
+        yaxis2=dict(
+            title="Cobertura de Dividendos (x)",
+            overlaying="y",
+            side="right",
+            ticksuffix="x",
+            showgrid=False,
+            tickfont=dict(size=11, color="#B45309"),
+            automargin=True,
+        ),
+        barmode="group",
+    )
+    return apply_corporate_layout(
+        fig,
+        "Sustentabilidade dos Dividendos pelo FCL",
+        subtitle="Verificação se a distribuição aos sócios cabe organicamente no caixa livre gerado",
+        y_title="Valores em R$",
+        height=370,
+    )
+
+
+# =============================================================================
+# MÓDULO 2 — GRÁFICOS DE CAPITAL DE GIRO E PRAZOS MÉDIOS
+# =============================================================================
+
+def chart_working_capital_ccl(df_scen: pd.DataFrame) -> go.Figure:
+    """Evolução temporal do Capital Circulante Líquido (CCL) com destaque de folga."""
+    df = df_scen.sort_values("Ano").copy()
+    valid = df.dropna(subset=["calc_ccl"])
+    x_labels = valid["Período"] if "Período" in valid.columns else valid["Ano"].map(lambda a: f"Ano {a}")
+
+    colors = [PALETTE["positive"] if v >= 0 else PALETTE["negative"] for v in valid["calc_ccl"]]
+    fig = go.Figure(
+        go.Bar(
+            x=x_labels,
+            y=valid["calc_ccl"],
+            marker_color=colors,
+            text=[f"R$ {v/1e6:,.1f} mi" if abs(v) >= 1e6 else f"R$ {v:,.0f}" for v in valid["calc_ccl"]],
+            textposition="outside",
+            hovertemplate="%{x}<br>CCL: R$ %{y:,.2f}<extra></extra>",
+        )
+    )
+    fig.add_hline(y=0.0, line_color="#334155", line_width=1.5)
+    return apply_corporate_layout(
+        fig,
+        "Evolução do Capital Circulante Líquido (CCL)",
+        subtitle="Ativo Circulante menos Passivo Circulante Ajustado (folga operacional de curto prazo)",
+        y_title="R$",
+        height=370,
+    )
+
+
+def chart_working_capital_pmr_pmp(df_scen: pd.DataFrame) -> go.Figure:
+    """Comparativo entre PMR e PMP (em dias comerciais)."""
+    df = df_scen.sort_values("Ano").copy()
+    valid = df.dropna(subset=["calc_pmr", "calc_pmp"])
+    x_labels = valid["Período"] if "Período" in valid.columns else valid["Ano"].map(lambda a: f"Ano {a}")
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=valid["calc_pmr"],
+            name="PMR (Prazo Médio de Recebimento)",
+            marker_color="#0F766E",
+            hovertemplate="%{x}<br>PMR: %{y:.1f} dias<extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=valid["calc_pmp"],
+            name="PMP (Prazo Médio de Pagamento)",
+            marker_color="#B45309",
+            hovertemplate="%{x}<br>PMP: %{y:.1f} dias<extra></extra>",
+        )
+    )
+    fig.update_layout(barmode="group", yaxis=dict(ticksuffix=" dias", automargin=True))
+    return apply_corporate_layout(
+        fig,
+        "PMR x PMP — Prazos Médios Operacionais",
+        subtitle="Tempo para receber de clientes versus tempo para pagar fornecedores (ano comercial = 360 dias)",
+        y_title="Dias",
+        height=370,
+    )
+
+
+def chart_working_capital_cycle(df_scen: pd.DataFrame) -> go.Figure:
+    """Ciclo Financeiro Simplificado (PMR - PMP) com coloração semântica de financiamento."""
+    df = df_scen.sort_values("Ano").copy()
+    valid = df.dropna(subset=["calc_ciclo_financeiro"])
+    x_labels = valid["Período"] if "Período" in valid.columns else valid["Ano"].map(lambda a: f"Ano {a}")
+
+    # Ciclo > 0: empresa financia operação (laranja); Ciclo <= 0: fornecedores financiam (verde)
+    colors = [PALETTE["warning"] if v > 0 else PALETTE["positive"] for v in valid["calc_ciclo_financeiro"]]
+
+    fig = go.Figure(
+        go.Bar(
+            x=x_labels,
+            y=valid["calc_ciclo_financeiro"],
+            marker_color=colors,
+            text=[f"{v:.1f} dias" for v in valid["calc_ciclo_financeiro"]],
+            textposition="outside",
+            hovertemplate="%{x}<br>Ciclo: %{y:.1f} dias<extra></extra>",
+        )
+    )
+    fig.add_hline(y=0.0, line_color="#334155", line_width=1.5)
+    fig.update_layout(yaxis=dict(ticksuffix=" dias", automargin=True))
+    return apply_corporate_layout(
+        fig,
+        "Ciclo Financeiro Simplificado (PMR − PMP)",
+        subtitle="Verde: fornecedores financiam a operação (ciclo negativo); Âmbar: empresa financia o intervalo",
+        y_title="Dias Financiados",
+        height=370,
+    )
+
+
+def chart_working_capital_need_vs_ccl(df_scen: pd.DataFrame) -> go.Figure:
+    """Comparação entre Necessidade Estimada de Capital de Giro e CCL disponível."""
+    df = df_scen.sort_values("Ano").copy()
+    valid = df.dropna(subset=["calc_ccl", "calc_necessidade_capital_giro"])
+    x_labels = valid["Período"] if "Período" in valid.columns else valid["Ano"].map(lambda a: f"Ano {a}")
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=valid["calc_ccl"],
+            name="CCL Disponível",
+            marker_color=PALETTE["primary"],
+            hovertemplate="%{x}<br>CCL: R$ %{y:,.2f}<extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=valid["calc_necessidade_capital_giro"],
+            name="Necessidade Estimada (NCG)",
+            marker_color="#94A3B8",
+            hovertemplate="%{x}<br>Necessidade CG: R$ %{y:,.2f}<extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=x_labels,
+            y=valid["calc_folga_ccl"],
+            name="Folga Líquida (CCL − NCG)",
+            mode="lines+markers",
+            line=dict(color=PALETTE["positive"], width=2.5),
+            marker=dict(size=7),
+            hovertemplate="%{x}<br>Folga: R$ %{y:,.2f}<extra></extra>",
+        )
+    )
+    fig.update_layout(barmode="group")
+    return apply_corporate_layout(
+        fig,
+        "Necessidade Estimada de Capital de Giro vs. CCL",
+        subtitle="Avaliação da cobertura dos recursos circulantes sobre a necessidade estimada do ciclo",
+        y_title="R$",
+        height=380,
+    )
+
+
+# =============================================================================
+# MÓDULO 3 — GRÁFICOS DE FLUXO DE CAIXA
+# =============================================================================
+
+def chart_cash_flow_evolution(df_scen: pd.DataFrame) -> go.Figure:
+    """Evolução temporal do Saldo Inicial e Saldo Final de Caixa."""
+    df = df_scen.sort_values("Ano").copy()
+    x_labels = df["Período"] if "Período" in df.columns else df["Ano"].map(lambda a: f"Ano {a}")
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scatter(
+            x=x_labels,
+            y=df["calc_saldo_inicial_caixa"],
+            name="Saldo Inicial de Caixa",
+            mode="lines+markers",
+            line=dict(color="#64748B", width=2, dash="dash"),
+            marker=dict(size=6),
+            hovertemplate="%{x}<br>Saldo Inicial: R$ %{y:,.2f}<extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=x_labels,
+            y=df["calc_saldo_final_caixa"],
+            name="Saldo Final de Caixa",
+            mode="lines+markers",
+            line=dict(color=PALETTE["primary"], width=3),
+            marker=dict(size=8),
+            hovertemplate="%{x}<br>Saldo Final: R$ %{y:,.2f}<extra></extra>",
+        )
+    )
+    return apply_corporate_layout(
+        fig,
+        "Evolução do Saldo de Caixa",
+        subtitle="Trajetória das disponibilidades ao final de cada exercício financeiro",
+        y_title="R$",
+        height=360,
+    )
+
+
+def chart_cash_flow_entries_exits(df_scen: pd.DataFrame) -> go.Figure:
+    """Comparativo entre Entradas Operacionais e Saídas Operacionais."""
+    df = df_scen.sort_values("Ano").copy()
+    x_labels = df["Período"] if "Período" in df.columns else df["Ano"].map(lambda a: f"Ano {a}")
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=df["calc_entradas_operacionais"],
+            name="Entradas Operacionais",
+            marker_color=PALETTE["positive"],
+            hovertemplate="%{x}<br>Entradas: R$ %{y:,.2f}<extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=df["calc_saidas_operacionais"],
+            name="Saídas Operacionais",
+            marker_color=PALETTE["negative"],
+            hovertemplate="%{x}<br>Saídas: R$ %{y:,.2f}<extra></extra>",
+        )
+    )
+    fig.update_layout(barmode="group")
+    return apply_corporate_layout(
+        fig,
+        "Entradas vs. Saídas Operacionais",
+        subtitle="Movimentação financeira bruta de recursos da operação",
+        y_title="R$",
+        height=360,
+    )
+
+
+def chart_cash_flow_composition(df_scen: pd.DataFrame) -> go.Figure:
+    """Composição das atividades operacionais, de investimento e financiamento."""
+    df = df_scen.sort_values("Ano").copy()
+    x_labels = df["Período"] if "Período" in df.columns else df["Ano"].map(lambda a: f"Ano {a}")
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=df["calc_fco"],
+            name="Atividades Operacionais (FCO)",
+            marker_color=PALETTE["primary"],
+            hovertemplate="%{x}<br>FCO: R$ %{y:,.2f}<extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=df["calc_fluxo_investimentos"],
+            name="Atividades de Investimento",
+            marker_color="#0F766E",
+            hovertemplate="%{x}<br>Investimentos: R$ %{y:,.2f}<extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=df["calc_fluxo_financiamento"],
+            name="Atividades de Financiamento",
+            marker_color="#475569",
+            hovertemplate="%{x}<br>Financiamento: R$ %{y:,.2f}<extra></extra>",
+        )
+    )
+    fig.update_layout(barmode="relative")
+    return apply_corporate_layout(
+        fig,
+        "Composição dos Fluxos de Caixa por Atividade",
+        subtitle="Contribuição líquida das atividades operacionais, de investimentos e financiamento",
+        y_title="R$",
+        height=380,
+    )
+
+
+def chart_cash_flow_waterfall(row: pd.Series, period_desc: str) -> go.Figure:
+    """Waterfall do saldo inicial de caixa até o saldo final."""
+    s_ini = float(row.get("calc_saldo_inicial_caixa", 0.0))
+    fco = float(row.get("calc_fco", 0.0))
+    inv = float(row.get("calc_fluxo_investimentos", 0.0))
+    fin = float(row.get("calc_fluxo_financiamento", 0.0))
+    s_fim = float(row.get("calc_saldo_final_caixa", 0.0))
+
+    labels = ["Saldo Inicial", "FCO (Operação)", "Investimentos", "Financiamento", "Saldo Final"]
+    values = [s_ini, fco, inv, fin, s_fim]
+    measures = ["relative", "relative", "relative", "relative", "total"]
+
+    fig = go.Figure(
+        go.Waterfall(
+            name="Formação do Saldo de Caixa",
+            orientation="v",
+            measure=measures,
+            x=labels,
+            textposition="outside",
+            text=[f"R$ {abs(v)/1e6:,.1f} mi" if abs(v) >= 1e6 else f"R$ {v:,.0f}" for v in values],
+            y=values,
+            connector=dict(line=dict(color="#CBD5E1")),
+            increasing=dict(marker=dict(color=PALETTE["positive"])),
+            decreasing=dict(marker=dict(color=PALETTE["negative"])),
+            totals=dict(marker=dict(color=PALETTE["primary"])),
+        )
+    )
+    return apply_corporate_layout(
+        fig,
+        f"Waterfall de Formação do Saldo de Caixa — {period_desc}",
+        subtitle="Transição do saldo inicial ao saldo final conciliado",
+        y_title="R$",
+        height=370,
+    )
+
+
+# =============================================================================
+# MÓDULO 4 — GRÁFICOS DE DEMONSTRAÇÃO DO VALOR ADICIONADO (DVA)
+# =============================================================================
+
+def chart_dva_waterfall(row: pd.Series, period_desc: str) -> go.Figure:
+    """Waterfall da formação da riqueza gerada na DVA (Itens 1 a 7)."""
+    rec = float(row.get("calc_dva_receitas_totais", 0.0))
+    ins = -abs(float(row.get("calc_dva_insumos_totais", 0.0)))
+    va_bruto = rec + ins
+    ret = -abs(float(row.get("calc_dva_retencoes", 0.0)))
+    va_liq = va_bruto + ret
+    transf = float(row.get("calc_dva_transferencias_totais", 0.0))
+    va_total = va_liq + transf
+
+    labels = [
+        "1. Receitas",
+        "2. (-) Insumos Terceiros",
+        "3. VA Bruto",
+        "4. (-) Retenções (D&A)",
+        "5. VA Líquido Produzido",
+        "6. (+) Transferências",
+        "7. VA Total a Distribuir",
+    ]
+    values = [rec, ins, va_bruto, ret, va_liq, transf, va_total]
+    measures = ["relative", "relative", "total", "relative", "total", "relative", "total"]
+
+    fig = go.Figure(
+        go.Waterfall(
+            name="Geração de Riqueza DVA",
+            orientation="v",
+            measure=measures,
+            x=labels,
+            textposition="outside",
+            text=[f"R$ {abs(v)/1e6:,.1f} mi" if abs(v) >= 1e6 else f"R$ {v:,.0f}" for v in values],
+            y=values,
+            connector=dict(line=dict(color="#CBD5E1")),
+            increasing=dict(marker=dict(color=PALETTE["positive"])),
+            decreasing=dict(marker=dict(color=PALETTE["negative"])),
+            totals=dict(marker=dict(color=PALETTE["primary"])),
+        )
+    )
+    return apply_corporate_layout(
+        fig,
+        f"Formação do Valor Adicionado (DVA) — {period_desc}",
+        subtitle="Passo a passo da riqueza gerada pela entidade até o montante total a distribuir",
+        y_title="R$",
+        height=380,
+    )
+
+
+def chart_dva_distribution_pie(row: pd.Series, period_desc: str) -> go.Figure:
+    """Gráfico de rosca corporativo da distribuição da riqueza entre os 4 agentes econômicos."""
+    pessoal = float(row.get("calc_dva_dist_pessoal", 0.0))
+    governo = float(row.get("calc_dva_dist_governo", 0.0))
+    terceiros = float(row.get("calc_dva_dist_terceiros", 0.0))
+    proprios = float(row.get("calc_dva_dist_proprios", 0.0))
+
+    labels = ["Pessoal (Empregados)", "Governo (Tributos)", "Capitais de Terceiros (Juros)", "Capitais Próprios (Sócios)"]
+    values = [max(0.0, pessoal), max(0.0, governo), max(0.0, terceiros), max(0.0, proprios)]
+    colors = ["#0F766E", "#15803D", "#B45309", "#0B5D3B"]
+
+    fig = go.Figure(
+        go.Pie(
+            labels=labels,
+            values=values,
+            hole=0.48,
+            marker=dict(colors=colors, line=dict(color="#FFFFFF", width=2)),
+            textinfo="percent+label",
+            hovertemplate="<b>%{label}</b><br>R$ %{value:,.2f}<br>Fatia: %{percent}<extra></extra>",
+        )
+    )
+    fig.update_layout(
+        title=dict(
+            text=f"<b>Distribuição da Riqueza (DVA) — {period_desc}</b><br><span style='font-size:12px;color:#64748B;'>Repartição do Valor Adicionado Total entre os agentes econômicos</span>",
+            x=0.0,
+            xanchor="left",
+            font=dict(size=15, color=PALETTE["neutral_dark"]),
+        ),
+        font=dict(family="Inter, Segoe UI, Roboto, sans-serif", size=12),
+        paper_bgcolor="#FFFFFF",
+        height=380,
+        margin=dict(l=10, r=10, t=55, b=25),
+        legend=dict(orientation="h", yanchor="top", y=-0.12, xanchor="center", x=0.5, font=dict(size=10.5)),
+    )
+    return fig
+
+
+def chart_dva_distribution_stacked_100(df_scen: pd.DataFrame) -> go.Figure:
+    """Barras empilhadas 100% da distribuição da riqueza ao longo dos períodos."""
+    df = df_scen.sort_values("Ano").copy()
+    x_labels = df["Período"] if "Período" in df.columns else df["Ano"].map(lambda a: f"Ano {a}")
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=df["calc_dva_part_pessoal"],
+            name="Pessoal (%)",
+            marker_color="#0F766E",
+            hovertemplate="%{x}<br>Pessoal: %{y:.1f}%<extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=df["calc_dva_part_governo"],
+            name="Governo (%)",
+            marker_color="#15803D",
+            hovertemplate="%{x}<br>Governo: %{y:.1f}%<extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=df["calc_dva_part_terceiros"],
+            name="Capitais Terceiros (%)",
+            marker_color="#B45309",
+            hovertemplate="%{x}<br>Terceiros: %{y:.1f}%<extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=df["calc_dva_part_proprios"],
+            name="Capitais Próprios (%)",
+            marker_color=PALETTE["primary"],
+            hovertemplate="%{x}<br>Sócios: %{y:.1f}%<extra></extra>",
+        )
+    )
+
+    fig.update_layout(barmode="stack", yaxis=dict(ticksuffix="%", range=[0, 100], automargin=True))
+    return apply_corporate_layout(
+        fig,
+        "Participação dos Agentes Econômicos (100% Empilhado)",
+        subtitle="Evolução percentual da fatia destinada a pessoal, governo, terceiros e sócios",
+        y_title="Participação no VA Total (%)",
+        height=380,
+    )
+
+
+def chart_dva_evolution(df_scen: pd.DataFrame) -> go.Figure:
+    """Evolução temporal de VA Bruto, VA Líquido Produzido e VA Total a Distribuir."""
+    df = df_scen.sort_values("Ano").copy()
+    x_labels = df["Período"] if "Período" in df.columns else df["Ano"].map(lambda a: f"Ano {a}")
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scatter(
+            x=x_labels,
+            y=df["calc_dva_va_bruto"],
+            name="VA Bruto",
+            mode="lines+markers",
+            line=dict(color="#64748B", width=2),
+            marker=dict(size=6),
+            hovertemplate="%{x}<br>VA Bruto: R$ %{y:,.2f}<extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=x_labels,
+            y=df["calc_dva_va_liquido"],
+            name="VA Líquido Produzido",
+            mode="lines+markers",
+            line=dict(color="#0F766E", width=2.5),
+            marker=dict(size=7),
+            hovertemplate="%{x}<br>VA Líquido: R$ %{y:,.2f}<extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=x_labels,
+            y=df["calc_dva_va_total"],
+            name="VA Total a Distribuir",
+            mode="lines+markers",
+            line=dict(color=PALETTE["primary"], width=3.5),
+            marker=dict(size=8, symbol="diamond"),
+            hovertemplate="%{x}<br>VA Total: R$ %{y:,.2f}<extra></extra>",
+        )
+    )
+    return apply_corporate_layout(
+        fig,
+        "Evolução da Geração de Riqueza (DVA)",
+        subtitle="Progressão temporal dos agregados econômicos produzidos e distribuídos",
+        y_title="R$",
+        height=380,
+    )
+
+
+def chart_dva_wealth_indicators(df_scen: pd.DataFrame) -> go.Figure:
+    """Indicadores de Geração de Riqueza, Retenção e Transferências."""
+    df = df_scen.sort_values("Ano").copy()
+    x_labels = df["Período"] if "Período" in df.columns else df["Ano"].map(lambda a: f"Ano {a}")
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=df["calc_dva_grau_riqueza"],
+            name="Grau de Geração de Riqueza (%)",
+            marker_color=PALETTE["primary"],
+            hovertemplate="%{x}<br>Grau Geração: %{y:.1f}%<extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=df["calc_dva_retencao_riqueza"],
+            name="Retenção de Riqueza (%)",
+            marker_color="#0F766E",
+            hovertemplate="%{x}<br>Retenção: %{y:.1f}%<extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=x_labels,
+            y=df["calc_dva_part_transferencias"],
+            name="Riqueza em Transferência (%)",
+            mode="lines+markers",
+            line=dict(color="#B45309", width=2),
+            marker=dict(size=6),
+            hovertemplate="%{x}<br>Transferências: %{y:.1f}%<extra></extra>",
+        )
+    )
+    fig.update_layout(barmode="group", yaxis=dict(ticksuffix="%", automargin=True))
+    return apply_corporate_layout(
+        fig,
+        "Indicadores Analíticos de Riqueza",
+        subtitle="Grau de transformação de receita em valor, taxa de retenção interna e dependência de transferências",
+        y_title="Percentual (%)",
+        height=370,
+    )
+
+
+def chart_dva_distribution_evolution(df_scen: pd.DataFrame) -> go.Figure:
+    """Evolução monetária (em R$) dos 4 grupos de distribuição da riqueza na DVA."""
+    df = df_scen.sort_values("Ano").copy()
+    x_labels = df["Período"] if "Período" in df.columns else df["Ano"].map(lambda a: f"Ano {a}")
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=df["calc_dva_dist_pessoal"],
+            name="Pessoal",
+            marker_color="#0F766E",
+            hovertemplate="%{x}<br>Pessoal: R$ %{y:,.2f}<extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=df["calc_dva_dist_governo"],
+            name="Governo",
+            marker_color="#15803D",
+            hovertemplate="%{x}<br>Governo: R$ %{y:,.2f}<extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=df["calc_dva_dist_terceiros"],
+            name="Capitais de Terceiros",
+            marker_color="#B45309",
+            hovertemplate="%{x}<br>Terceiros: R$ %{y:,.2f}<extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Bar(
+            x=x_labels,
+            y=df["calc_dva_dist_proprios"],
+            name="Capitais Próprios",
+            marker_color=PALETTE["primary"],
+            hovertemplate="%{x}<br>Sócios: R$ %{y:,.2f}<extra></extra>",
+        )
+    )
+    fig.update_layout(barmode="stack")
+    return apply_corporate_layout(
+        fig,
+        "Evolução da Distribuição da Riqueza (R$)",
+        subtitle="Montantes anuais alocados a pessoal, governo, credores e sócios",
+        y_title="R$",
+        height=380,
+    )

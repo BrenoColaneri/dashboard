@@ -131,7 +131,7 @@ def render_page_visao_executiva(
         st.button(
             "📈 Indicadores Financeiros",
             on_click=_navigate_to_page,
-            args=("5. Indicadores Financeiros",),
+            args=("6. Indicadores Financeiros",),
             use_container_width=True,
             key="quick_kpis",
         )
@@ -141,7 +141,7 @@ def render_page_visao_executiva(
         st.button(
             "🎯 Análise de Sensibilidade",
             on_click=_navigate_to_page,
-            args=("8. Análise de Sensibilidade",),
+            args=("11. Análise de Sensibilidade",),
             use_container_width=True,
             key="quick_sens",
         )
@@ -149,7 +149,7 @@ def render_page_visao_executiva(
         st.button(
             "🔬 Análise Estatística",
             on_click=_navigate_to_page,
-            args=("11. Análise Estatística",),
+            args=("13. Análise Estatística",),
             use_container_width=True,
             key="quick_stat",
         )
@@ -157,9 +157,43 @@ def render_page_visao_executiva(
         st.button(
             "📑 Relatórios Gerenciais",
             on_click=_navigate_to_page,
-            args=("14. Relatórios Gerenciais",),
+            args=("15. Relatórios Gerenciais",),
             use_container_width=True,
             key="quick_rep",
+        )
+
+    q7, q8, q9, q10 = st.columns(4)
+    with q7:
+        st.button(
+            "💵 Fluxo de Caixa",
+            on_click=_navigate_to_page,
+            args=("4. Fluxo de Caixa",),
+            use_container_width=True,
+            key="quick_fluxo",
+        )
+    with q8:
+        st.button(
+            "💎 Demonstração do Valor Adicionado (DVA)",
+            on_click=_navigate_to_page,
+            args=("5. Demonstração do Valor Adicionado (DVA)",),
+            use_container_width=True,
+            key="quick_dva",
+        )
+    with q9:
+        st.button(
+            "🌊 Índices da DFC",
+            on_click=_navigate_to_page,
+            args=("7. Índices da DFC",),
+            use_container_width=True,
+            key="quick_dfc",
+        )
+    with q10:
+        st.button(
+            "🔄 Capital de Giro",
+            on_click=_navigate_to_page,
+            args=("8. Capital de Giro e Prazos Médios",),
+            use_container_width=True,
+            key="quick_giro",
         )
     st.markdown("</div>", unsafe_allow_html=True)
 
