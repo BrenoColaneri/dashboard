@@ -208,98 +208,299 @@ def authenticate_credentials(username: str, password: str) -> tuple[bool, str]:
 
 
 def render_login_screen(expired_message: str = "") -> None:
-    """Renderiza a tela corporativa oficial de autenticação da CTI Global em um único card elegante e centralizado."""
+    """Renderiza a tela corporativa oficial de autenticação da CTI Global em layout horizontal split-screen (55% / 45%)."""
     _init_auth_session_state()
 
-    # Injeção de CSS específico da tela de login para simetria, centralização e responsividade total
+    # Injeção de CSS específico para o layout split-screen de alta densidade sem rolagem no desktop
     st.markdown(
         """
         <style>
-        /* Fundo elegante e neutro para a tela de autenticação */
-        [data-testid="stAppViewContainer"] {
-            background: linear-gradient(180deg, #F8FAFC 0%, #F1F5F9 100%) !important;
+        /* -------------------------------------------------------------
+           1. RESET DE VIEWPORT: ZERO ROLAGEM DESKTOP (100vw x 100dvh)
+           ------------------------------------------------------------- */
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100vw !important;
+            max-width: 100vw !important;
+            height: 100vh !important;
+            height: 100dvh !important;
+            overflow: hidden !important;
+            background: #F8FAFC !important;
         }
 
-        /* Oculta completamente barra lateral e elementos desnecessários na tela de login */
-        [data-testid="stSidebar"] {
-            display: none !important;
-        }
-        [data-testid="collapsedControl"] {
-            display: none !important;
-        }
-        header[data-testid="stHeader"] {
-            background: transparent !important;
+        [data-testid="stAppViewContainer"],
+        [data-testid="stAppViewContainer"] > .main,
+        section.main {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100vw !important;
+            max-width: 100vw !important;
+            height: 100vh !important;
+            height: 100dvh !important;
+            max-height: 100vh !important;
+            max-height: 100dvh !important;
+            overflow: hidden !important;
+            background: #F8FAFC !important;
         }
 
-        /* Centralização vertical e horizontal do container principal */
+        /* Oculta completamente barra lateral e elementos superiores do Streamlit */
+        [data-testid="stSidebar"],
+        [data-testid="collapsedControl"],
+        header[data-testid="stHeader"],
+        #MainMenu,
+        footer {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        /* Container principal sem margens e ocupando 100% da viewport */
         .block-container {
-            max-width: 480px !important;
-            padding-top: 7vh !important;
-            padding-bottom: 6vh !important;
-            margin: 0 auto !important;
+            max-width: 100vw !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            height: 100dvh !important;
+            max-height: 100vh !important;
+            max-height: 100dvh !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            overflow: hidden !important;
+            box-sizing: border-box !important;
         }
 
-        /* O CARD ÚNICO INTEGRADO DE AUTENTICAÇÃO */
-        [data-testid="stForm"] {
+        /* Bloco horizontal Streamlit: divide em duas metades perfeitas */
+        [data-testid="stHorizontalBlock"] {
+            width: 100vw !important;
+            max-width: 100vw !important;
+            height: 100vh !important;
+            height: 100dvh !important;
+            min-height: 100vh !important;
+            min-height: 100dvh !important;
+            max-height: 100vh !important;
+            max-height: 100dvh !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            gap: 0 !important;
+            align-items: stretch !important;
+            flex-wrap: nowrap !important;
+            display: flex !important;
+        }
+
+        /* Centralizadores internos de coluna */
+        [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
+            margin: 0 !important;
+            box-sizing: border-box !important;
+        }
+        [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] > div {
+            width: 100% !important;
+            height: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            align-items: center !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        /* -------------------------------------------------------------
+           2. LADO ESQUERDO: APRESENTAÇÃO INSTITUCIONAL (55% DA LARGURA)
+           ------------------------------------------------------------- */
+        [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:first-child {
+            width: 55vw !important;
+            max-width: 55vw !important;
+            flex: 55 1 0% !important;
+            height: 100vh !important;
+            height: 100dvh !important;
+            background: radial-gradient(circle at 18% 25%, rgba(52, 211, 153, 0.12) 0%, transparent 45%),
+                        linear-gradient(145deg, #043826 0%, #064E3B 45%, #0B5D3B 100%) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            align-items: center !important;
+            padding: 3rem 4.5rem !important;
+            box-sizing: border-box !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+            overflow: hidden !important;
+            position: relative !important;
+        }
+
+        .cti-inst-content-box {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .cti-inst-brand-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(6, 78, 59, 0.85);
+            color: #A7F3D0;
+            font-size: 0.76rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            border: 1px solid rgba(167, 243, 208, 0.35);
+            margin-bottom: 1.25rem;
+            width: fit-content;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+        .cti-inst-brand-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #34D399;
+            box-shadow: 0 0 6px #34D399;
+        }
+
+        .cti-inst-headline {
+            color: #FFFFFF;
+            font-size: 1.95rem;
+            font-weight: 700;
+            line-height: 1.22;
+            letter-spacing: -0.025em;
+            margin: 0 0 0.85rem 0;
+        }
+
+        .cti-inst-lead {
+            color: #E2E8F0;
+            font-size: 0.95rem;
+            line-height: 1.55;
+            margin: 0 0 1.75rem 0;
+            font-weight: 400;
+        }
+
+        .cti-inst-feature-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 0;
+            padding: 0;
+        }
+
+        .cti-inst-feature-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 12px 16px;
+            box-sizing: border-box;
+            backdrop-filter: blur(4px);
+            transition: all 0.2s ease;
+        }
+        .cti-inst-feature-card:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(52, 211, 153, 0.3);
+            transform: translateX(3px);
+        }
+
+        .cti-inst-feature-icon {
+            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: rgba(52, 211, 153, 0.12);
+            border: 1px solid rgba(52, 211, 153, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #34D399;
+        }
+
+        .cti-inst-feature-title {
+            color: #FFFFFF;
+            font-size: 0.88rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+            line-height: 1.3;
+        }
+
+        .cti-inst-feature-desc {
+            color: #CBD5E1;
+            font-size: 0.78rem;
+            line-height: 1.38;
+            margin: 0;
+        }
+
+        /* -------------------------------------------------------------
+           3. LADO DIREITO: LOGIN E FORMULÁRIO (45% DA LARGURA)
+           ------------------------------------------------------------- */
+        [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:last-child {
+            width: 45vw !important;
+            max-width: 45vw !important;
+            flex: 45 1 0% !important;
+            height: 100vh !important;
+            height: 100dvh !important;
+            background: #F8FAFC !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            align-items: center !important;
+            padding: 2.5rem 3rem !important;
+            box-sizing: border-box !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+        }
+
+        /* Card do Formulário: largura exata confortável de 380px */
+        [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:last-child [data-testid="stForm"] {
+            width: 100% !important;
+            max-width: 380px !important;
+            min-width: 320px !important;
             background: #FFFFFF !important;
             border: 1px solid #E2E8F0 !important;
-            border-radius: 20px !important;
-            box-shadow: 0 20px 45px -10px rgba(11, 93, 59, 0.10), 0 8px 20px -4px rgba(15, 23, 42, 0.04) !important;
-            padding: 40px 36px 30px 36px !important;
-            width: 100% !important;
+            border-radius: 18px !important;
+            box-shadow: 0 12px 30px -8px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.03) !important;
+            padding: 32px 30px 24px 30px !important;
+            box-sizing: border-box !important;
             margin: 0 auto !important;
         }
 
-        /* Cabeçalho integrado dentro do card */
-        .cti-login-inner-header {
-            text-align: center;
-            margin-bottom: 24px;
+        .cti-form-header {
+            text-align: left;
+            margin-bottom: 20px;
         }
-        .cti-login-badge {
-            display: inline-block;
-            background: #ECFDF5;
-            color: #0B5D3B;
-            font-size: 0.74rem;
-            font-weight: 700;
-            letter-spacing: 0.09em;
-            text-transform: uppercase;
-            padding: 5px 14px;
-            border-radius: 9999px;
-            border: 1px solid #A7F3D0;
-            margin-bottom: 12px;
-        }
-        .cti-login-headline {
+        .cti-form-title {
             color: #0F172A;
-            font-size: 1.55rem;
+            font-size: 1.48rem;
             font-weight: 700;
-            margin: 0 0 8px 0;
+            margin: 0 0 6px 0;
             letter-spacing: -0.025em;
             line-height: 1.25;
         }
-        .cti-login-subheadline {
+        .cti-form-subtitle {
             color: #64748B;
-            font-size: 0.88rem;
+            font-size: 0.86rem;
             line-height: 1.45;
             margin: 0;
         }
 
-        /* Estilização refinada e simétrica dos campos de entrada */
+        /* Padronização dos inputs */
         [data-testid="stTextInput"] {
-            margin-bottom: 14px !important;
+            margin-bottom: 12px !important;
         }
         [data-testid="stTextInput"] label p {
-            font-size: 0.86rem !important;
+            font-size: 0.85rem !important;
             font-weight: 600 !important;
             color: #334155 !important;
-            margin-bottom: 5px !important;
+            margin-bottom: 4px !important;
         }
         [data-testid="stTextInput"] input {
-            border-radius: 10px !important;
+            border-radius: 9px !important;
             border: 1px solid #CBD5E1 !important;
             background-color: #F8FAFC !important;
             font-size: 0.94rem !important;
-            padding: 10px 14px !important;
-            height: 44px !important;
+            padding: 9px 12px !important;
+            height: 42px !important;
             transition: all 0.2s ease-in-out !important;
         }
         [data-testid="stTextInput"] input:focus {
@@ -309,23 +510,23 @@ def render_login_screen(expired_message: str = "") -> None:
             outline: none !important;
         }
 
-        /* Botão Entrar em verde institucional destacado */
+        /* Botão Entrar em verde corporativo destacado */
         [data-testid="stFormSubmitButton"] button {
             background: #0B5D3B !important;
             color: #FFFFFF !important;
             border: none !important;
-            border-radius: 10px !important;
+            border-radius: 9px !important;
             font-weight: 600 !important;
-            font-size: 1rem !important;
-            height: 46px !important;
+            font-size: 0.98rem !important;
+            height: 44px !important;
             letter-spacing: 0.01em !important;
-            box-shadow: 0 4px 14px rgba(11, 93, 59, 0.25) !important;
+            box-shadow: 0 4px 12px rgba(11, 93, 59, 0.24) !important;
             transition: all 0.2s ease-in-out !important;
-            margin-top: 8px !important;
+            margin-top: 6px !important;
         }
         [data-testid="stFormSubmitButton"] button:hover {
             background: #064E3B !important;
-            box-shadow: 0 6px 18px rgba(11, 93, 59, 0.35) !important;
+            box-shadow: 0 6px 16px rgba(11, 93, 59, 0.34) !important;
             transform: translateY(-1px) !important;
         }
         [data-testid="stFormSubmitButton"] button:active {
@@ -333,38 +534,95 @@ def render_login_screen(expired_message: str = "") -> None:
             box-shadow: 0 2px 6px rgba(11, 93, 59, 0.2) !important;
         }
 
-        /* Rodapé institucional integrado dentro do card */
-        .cti-login-inner-footer {
-            margin-top: 22px;
-            padding-top: 18px;
+        /* Rodapé interno do card */
+        .cti-form-footer {
+            margin-top: 18px;
+            padding-top: 14px;
             border-top: 1px solid #F1F5F9;
             text-align: center;
-            font-size: 0.76rem;
+            font-size: 0.74rem;
             color: #94A3B8;
             line-height: 1.45;
         }
-        .cti-login-inner-footer strong {
+        .cti-form-footer strong {
             color: #0B5D3B;
             font-weight: 600;
         }
 
-        /* Responsividade para celulares e telas pequenas */
-        @media (max-width: 480px) {
+        /* -------------------------------------------------------------
+           4. RESPONSIVIDADE: CELULARES E TABLETS (<= 900px)
+           ------------------------------------------------------------- */
+        @media (max-width: 900px) {
+            html, body,
+            [data-testid="stAppViewContainer"],
+            [data-testid="stAppViewContainer"] > .main,
+            section.main,
             .block-container {
-                padding-top: 2.5rem !important;
-                padding-bottom: 2rem !important;
-                padding-left: 1rem !important;
-                padding-right: 1rem !important;
+                height: auto !important;
+                max-height: none !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
             }
-            [data-testid="stForm"] {
-                padding: 28px 22px 24px 22px !important;
-                border-radius: 16px !important;
+
+            .block-container {
+                padding: 0 !important;
             }
-            .cti-login-headline {
-                font-size: 1.35rem !important;
+
+            [data-testid="stHorizontalBlock"] {
+                flex-direction: column !important;
+                height: auto !important;
+                min-height: 100vh !important;
+                max-height: none !important;
+                width: 100% !important;
             }
-            .cti-login-subheadline {
-                font-size: 0.82rem !important;
+
+            /* Cabeçalho institucional compacto no topo */
+            [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:first-child {
+                width: 100% !important;
+                max-width: 100% !important;
+                flex: 0 0 auto !important;
+                height: auto !important;
+                max-height: none !important;
+                padding: 1.5rem 1.25rem 1.25rem 1.25rem !important;
+                border-right: none !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+            }
+
+            .cti-inst-content-box {
+                max-width: 100%;
+                text-align: center;
+                align-items: center;
+            }
+            .cti-inst-brand-tag {
+                margin: 0 auto 0.6rem auto;
+            }
+            .cti-inst-headline {
+                font-size: 1.3rem !important;
+                margin-bottom: 0.3rem !important;
+                text-align: center;
+            }
+            .cti-inst-lead {
+                display: none !important; /* cabeçalho compacto para preservar espaço no celular */
+            }
+            .cti-inst-feature-list {
+                display: none !important; /* cabeçalho compacto para priorizar o formulário */
+            }
+
+            /* Lado do login ocupa o restante com total foco */
+            [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:last-child {
+                width: 100% !important;
+                max-width: 100% !important;
+                flex: 1 1 auto !important;
+                height: auto !important;
+                max-height: none !important;
+                padding: 1.5rem 1rem 2.5rem 1rem !important;
+            }
+
+            [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:last-child [data-testid="stForm"] {
+                max-width: 100% !important;
+                min-width: unset !important;
+                padding: 24px 20px !important;
+                border-radius: 14px !important;
             }
         }
         </style>
@@ -372,73 +630,133 @@ def render_login_screen(expired_message: str = "") -> None:
         unsafe_allow_html=True,
     )
 
-    # Exibição de aviso de expiração se houver
-    if expired_message:
-        st.warning(f"⚠️ {expired_message}")
+    # Divisão em duas colunas com proporção aproximada de 55% e 45% (1.22 : 1)
+    col_left, col_right = st.columns([1.22, 1], gap="small")
 
-    # Card único integrado dentro do formulário
-    with st.form("cti_corporate_login_form", clear_on_submit=False):
-        # 1. Cabeçalho integrado no topo do card
+    # -------------------------------------------------------------
+    # LADO ESQUERDO — APRESENTAÇÃO INSTITUCIONAL
+    # -------------------------------------------------------------
+    with col_left:
         st.markdown(
             """
-            <div class="cti-login-inner-header">
-                <span class="cti-login-badge">CTI GLOBAL</span>
-                <h1 class="cti-login-headline">Bem-vindo à CTI Global</h1>
-                <p class="cti-login-subheadline">Faça login para acessar a plataforma analítica de planejamento financeiro.</p>
+            <div class="cti-inst-content-box">
+                <div class="cti-inst-brand-tag">
+                    <span class="cti-inst-brand-dot"></span>
+                    <span>CTI GLOBAL</span>
+                </div>
+                <h1 class="cti-inst-headline">Inteligência financeira para decisões estratégicas</h1>
+                <p class="cti-inst-lead">Uma plataforma integrada para análise de desempenho, planejamento financeiro e acompanhamento de indicadores corporativos.</p>
+                <div class="cti-inst-feature-list">
+                    <div class="cti-inst-feature-card">
+                        <div class="cti-inst-feature-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="cti-inst-feature-title">Demonstrações Integradas</div>
+                            <div class="cti-inst-feature-desc">DRE, Balanço, DFC e DVA com validação contábil contínua.</div>
+                        </div>
+                    </div>
+                    <div class="cti-inst-feature-card">
+                        <div class="cti-inst-feature-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 14 14"></polyline>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="cti-inst-feature-title">62 Indicadores Auditados</div>
+                            <div class="cti-inst-feature-desc">Métricas de liquidez, rentabilidade, capital de giro e solvência.</div>
+                        </div>
+                    </div>
+                    <div class="cti-inst-feature-card">
+                        <div class="cti-inst-feature-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="cti-inst-feature-title">Planejamento e Governança</div>
+                            <div class="cti-inst-feature-desc">Simulação de cenários, sensibilidade e projeções estratégicas.</div>
+                        </div>
+                    </div>
+                </div>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
-        # 2. Campos de Usuário e Senha padronizados
-        username_input = st.text_input(
-            "Usuário:",
-            placeholder="Digite seu usuário",
-            key="login_user_input",
-            autocomplete="username",
-        )
+    # -------------------------------------------------------------
+    # LADO DIREITO — FORMULÁRIO DE LOGIN
+    # -------------------------------------------------------------
+    with col_right:
+        with st.form("cti_corporate_login_form", clear_on_submit=False):
+            st.markdown(
+                """
+                <div class="cti-form-header">
+                    <h2 class="cti-form-title">Bem-vindo à CTI Global</h2>
+                    <p class="cti-form-subtitle">Entre com suas credenciais para acessar a plataforma.</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
-        password_input = st.text_input(
-            "Senha:",
-            type="password",
-            placeholder="Digite sua senha",
-            key="login_pass_input",
-            autocomplete="current-password",
-        )
+            # Exibição de aviso de sessão expirada se houver
+            if expired_message:
+                st.warning(f"⚠️ {expired_message}")
 
-        # 3. Botão Entrar com destaque visual corporativo
-        submit_btn = st.form_submit_button(
-            "Entrar",
-            use_container_width=True,
-            type="primary",
-            key="cti_corporate_login_form_submit",
-        )
+            # Campos de Usuário e Senha padronizados
+            username_input = st.text_input(
+                "Usuário:",
+                placeholder="Digite seu usuário",
+                key="login_user_input",
+                autocomplete="username",
+            )
 
-        # 4. Processamento da autenticação
-        if submit_btn:
-            try:
-                with st.spinner("Autenticando credenciais corporativas..."):
-                    success, message = authenticate_credentials(username_input, password_input)
+            password_input = st.text_input(
+                "Senha:",
+                type="password",
+                placeholder="Digite sua senha",
+                key="login_pass_input",
+                autocomplete="current-password",
+            )
 
-                if success:
-                    st.success("Acesso autorizado com sucesso! Redirecionando...")
-                    time.sleep(0.15)
-                    st.rerun()
-                else:
-                    st.error(f"❌ {message}")
-            except Exception:
-                st.error("❌ Não foi possível realizar o acesso neste momento. Tente novamente.")
+            # Botão Entrar destacado em verde-escuro
+            submit_btn = st.form_submit_button(
+                "Entrar",
+                use_container_width=True,
+                type="primary",
+                key="cti_corporate_login_form_submit",
+            )
 
-        # 5. Rodapé institucional integrado no mesmo card
-        st.markdown(
-            """
-            <div class="cti-login-inner-footer">
-                <strong>CTI Global</strong> • Plataforma Analítica de Planejamento Financeiro<br>
-                <span>Acesso restrito e monitorado por controladoria institucional.</span>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+            # Processamento de autenticação no backend
+            if submit_btn:
+                try:
+                    with st.spinner("Autenticando credenciais corporativas..."):
+                        success, message = authenticate_credentials(username_input, password_input)
+
+                    if success:
+                        st.success("Acesso autorizado com sucesso! Redirecionando...")
+                        time.sleep(0.15)
+                        st.rerun()
+                    else:
+                        st.error(f"❌ {message}")
+                except Exception:
+                    st.error("❌ Não foi possível realizar o acesso neste momento. Tente novamente.")
+
+            # Rodapé discreto no próprio card
+            st.markdown(
+                """
+                <div class="cti-form-footer">
+                    <strong>CTI Global</strong> | Plataforma Analítica de Planejamento Financeiro
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
 
 
 def render_user_auth_bar() -> None:
