@@ -2,6 +2,10 @@
 
 Plataforma corporativa analítica de Business Intelligence, Controladoria, Planejamento Financeiro e Ciência de Dados da **CTI Global**.
 
+> 📌 **DOCUMENTAÇÕES DEDICADAS PARA AS ENTREGAS 2 (FECAP 2026):**
+> - 📊 **Contabilidade e Finanças (Entrega 2 - Final):** Acesse [`README_CONTABILIDADE_E_FINANCAS.md`](./README_CONTABILIDADE_E_FINANCAS.md) para o detalhamento das demonstrações financeiras (DRE, Balanço, DFC, DVA), módulos de capital de giro e prazos médios, índices da DFC, sensibilidade e validação contábil.
+> - 🔬 **Projeto Interdisciplinar: Ciência de Dados (Entrega 2 - Final):** Acesse [`README_CIENCIA_DE_DADOS.md`](./README_CIENCIA_DE_DADOS.md) para o detalhamento da arquitetura de dados (Raw -> Staging -> Processed), catálogo de 62 KPIs, análises estatísticas descritiva/inferencial, modelo de regressão linear múltipla (OLS) com prevenção de vazamento e documentação técnica.
+
 ---
 
 ## 1. Visão Geral e Objetivo da Plataforma
