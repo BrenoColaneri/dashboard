@@ -21,11 +21,12 @@ Este sistema integra, audita e analisa a base de dados corporativa oficial da CT
 | Camada | Tecnologias |
 | :--- | :--- |
 | **Linguagem & Interface Web** | Python 3.11+ (validado em Python 3.14), Streamlit |
+| **Segurança & Autenticação** | Bcrypt (hashing seguro), HMAC tempo-constante, proteção de sessão e rate-limiting |
 | **Engenharia de Dados & Cache** | Pandas, NumPy, PyArrow (Parquet com verificação SHA-256), OpenPyXL |
 | **Visualização Interativa** | Plotly Graph Objects (padrão numérico brasileiro `pt-BR` e design responsivo) |
 | **Estatística & Econometria / ML** | SciPy, Statsmodels (OLS robusto `HC3` / Cluster), Scikit-learn (`GroupShuffleSplit`) |
 | **Exportação Documental** | XlsxWriter (`.xlsx` formatado multi-abas), fpdf2 (`.pdf` executivo), CSV UTF-8-BOM |
-| **Qualidade & Testes Automatizados** | Pytest + Streamlit `AppTest` (testes unitários, reconciliação contábil e E2E UI) |
+| **Qualidade & Testes Automatizados** | Pytest + Streamlit `AppTest` (testes unitários, autenticação, reconciliação contábil e E2E UI) |
 
 ---
 
@@ -40,6 +41,7 @@ DASHBOARD/
 ├── .streamlit/
 │   └── config.toml                     # Tema institucional corporativo (verde-escuro #0B5D3B) e segurança
 ├── src/
+│   ├── auth.py                         # Gatekeeper de autenticação, bcrypt, rate limiting e gestão de sessão
 │   ├── config.py                       # Catálogo auditado dos 62 KPIs, paleta corporativa e formatadores pt-BR
 │   ├── data_loader.py                  # Descoberta segura do Excel, upload em memória e cache Parquet (Staging)
 │   ├── data_processing.py              # Pipeline Staging -> Processed (Painel 14.400 vs Resumo 1.200)
@@ -59,6 +61,7 @@ DASHBOARD/
 │       └── datascience_quality_exports.py # Páginas 13 a 16 (Estatística, OLS, Relatórios & Governança)
 ├── tests/
 │   ├── conftest.py                     # Fixtures compartilhadas sobre a base corporativa oficial
+│   ├── test_auth.py                    # Testes de autenticação, bcrypt, rate limiting, timeout e logout
 │   ├── test_data_loading.py            # Testes de leitura, abas essenciais, erros e modo sintético isolado
 │   ├── test_financial_kpis.py          # Reconciliação 100%, Ano 12 N/D, safe_divide, DFC e metas
 │   ├── test_dfc_capital_dva.py         # Testes dos 4 novos módulos (DFC, Giro, Fluxo, DVA) e identidades contábeis
@@ -117,7 +120,36 @@ Acesse no navegador: `http://localhost:8501`
 
 ---
 
-## 6. Como Executar os Testes Automatizados
+## 6. Controle de Acesso, Autenticação e Gestão de Sessão
+
+A aplicação abre diretamente na tela institucional de autenticação da CTI Global, bloqueando o acesso a todas as 17 páginas e impedindo o carregamento prévio de dados financeiros confidenciais:
+
+- **Credenciais Iniciais (Ambiente de Desenvolvimento):**
+  - **Usuário:** `admin`
+  - **Senha:** `admin123`
+- **Validação Segura no Backend:** A verificação utiliza hash criptográfico **bcrypt** (`$2b$12$...`) com salt aleatório e comparação de tempo constante (`hmac.compare_digest`). Nenhuma senha em texto puro é mantida fixa no código-fonte.
+- **Configuração de Produção e Troca de Senha:**
+  - Configure as variáveis de ambiente no arquivo `.env` (ou nos Secrets da plataforma de nuvem em `.streamlit/secrets.toml`):
+    ```toml
+    # Exemplo em .streamlit/secrets.toml
+    [auth]
+    username = "admin"
+    password_hash = "$2b$12$..." # Hash gerado via bcrypt
+    session_timeout_minutes = 30
+    max_login_attempts = 5
+    lockout_minutes = 15
+    ```
+  - Para gerar um novo hash para uma nova senha forte, execute no terminal:
+    ```powershell
+    python -c "import bcrypt; print(bcrypt.hashpw(b'SuaSenhaForteAqui', bcrypt.gensalt(12)).decode())"
+    ```
+- **Expiração por Inatividade:** Sessões inativas por mais de **30 minutos** são invalidadas automaticamente pelo servidor, exigindo nova autenticação.
+- **Proteção contra Força Bruta (Rate Limiting):** Após **5 tentativas incorretas consecutivas**, o acesso é bloqueado temporariamente por **15 minutos**.
+- **Botão de Logout Institucional:** Disponível na barra lateral e cabeçalho corporativo (`👤 Administrador | 🚪 Sair do Sistema`). O clique revoga a sessão no servidor e impede o retorno através do botão "Voltar" do navegador.
+
+---
+
+## 7. Como Executar os Testes Automatizados
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -v

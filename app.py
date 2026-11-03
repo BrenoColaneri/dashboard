@@ -21,6 +21,11 @@ from src.data_loader import (
 from src.data_processing import ProcessedDataStore, process_dataset
 from src.data_validation import ValidationSummary, run_full_validation
 from src.ui_components import inject_corporate_css, render_callout
+from src.auth import (
+    check_session_validity,
+    render_login_screen,
+    render_user_auth_bar,
+)
 from src.views.datascience_quality_exports import (
     render_page_analise_estatistica,
     render_page_governanca_qualidade,
@@ -181,6 +186,15 @@ def _resolve_datastore() -> tuple[ProcessedDataStore, ValidationSummary] | None:
 
 def main() -> None:
     inject_corporate_css()
+
+    # 1. Gatekeeper de Segurança: Bloqueio Total antes da Autenticação
+    is_valid, session_msg = check_session_validity()
+    if not is_valid:
+        render_login_screen(expired_message=session_msg)
+        return
+
+    # 2. Barra Institucional de Sessão e Botão de Logout
+    render_user_auth_bar()
 
     st.sidebar.markdown(
         "### CTI GLOBAL\n"

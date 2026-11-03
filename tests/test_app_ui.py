@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from pathlib import Path
 
 from streamlit.testing.v1 import AppTest
@@ -9,10 +10,18 @@ from streamlit.testing.v1 import AppTest
 from app import PAGES
 
 
-def test_all_17_dashboard_pages_render_without_exceptions() -> None:
+def _setup_authenticated_app() -> AppTest:
     app_path = str(Path(__file__).resolve().parent.parent / "app.py")
     at = AppTest.from_file(app_path, default_timeout=60)
+    at.session_state["is_authenticated"] = True
+    at.session_state["authenticated_user"] = "admin"
+    at.session_state["auth_last_activity"] = time.time()
     at.run()
+    return at
+
+
+def test_all_17_dashboard_pages_render_without_exceptions() -> None:
+    at = _setup_authenticated_app()
     assert len(at.exception) == 0, f"Exceção na carga inicial: {at.exception}"
 
     # Valida que exatamente as 17 páginas corporativas estão cadastradas
@@ -26,9 +35,7 @@ def test_all_17_dashboard_pages_render_without_exceptions() -> None:
 
 
 def test_quick_navigation_buttons_transition_correctly() -> None:
-    app_path = str(Path(__file__).resolve().parent.parent / "app.py")
-    at = AppTest.from_file(app_path, default_timeout=60)
-    at.run()
+    at = _setup_authenticated_app()
     assert len(at.exception) == 0
 
     quick_targets = [
